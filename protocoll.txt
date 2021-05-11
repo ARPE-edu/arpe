@@ -1,0 +1,11 @@
+Find running tasks:
+ps -ef | grep app
+
+Kill process:
+kill -9 #numberofprocess
+
+Enter folder:
+cd Q
+
+Start webpage:
+nohup python3.7 appV2.py &
