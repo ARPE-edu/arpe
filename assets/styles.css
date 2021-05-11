@@ -35,3 +35,17 @@
     borderRadius: 5px;
     textAlign: center;
 }
+
+.alba-logo {
+    height: 50%;
+    width: 50%;
+    float: center;
+    position: relative;
+}
+
+.upc-logo {
+    height: 25%;
+    width: 25%;
+    float: center;
+    position: relative
+}
