@@ -1,0 +1,9 @@
+pandas
+matplotlib
+scipy
+scikit-rf
+flask
+dash
+colorama
+progress
+control

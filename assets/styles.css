@@ -1,0 +1,37 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 20%;
+    padding: 20px 10px;
+    background-color: #f8f9fa
+}
+
+.content {
+    position: inline;
+    margin-left: 25%;
+    margin-right: 5%;
+    top: 0;
+    padding: 20px, 10px
+}
+
+.text {
+    textAlign: center;
+    color: #191970
+}
+
+.card-text {
+    textAlign: center;
+    color: #0074D9
+}
+
+.upload {
+    width: 98%;
+    height: 60px;
+    lineHeight: 60px;
+    borderWidth: 1px;
+    borderStyle: dashed;
+    borderRadius: 5px;
+    textAlign: center;
+}
