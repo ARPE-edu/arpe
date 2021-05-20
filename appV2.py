@@ -611,5 +611,7 @@ def update_theq_chart(session_id,TDicttran,selector):
 
 """ Run it """
 if __name__ == '__main__':
-    # app.run_server(port=8050,debug=False,host='0.0.0.0')
-    app.run_server(port=8050, debug=False)
+    ####### global environment
+    app.run_server(port=8050,debug=False,host='0.0.0.0')
+    ####### local environment
+    #app.run_server(port=8050, debug=False)
