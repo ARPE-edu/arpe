@@ -38,11 +38,6 @@ server = Flask(__name__)
 server = flask.Flask(__name__) # define flask app.server
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server) # call flask server
 
-TDict = {}
-TDictRefl = {}
-amountoffiles = []
-
-
 def serve_layout():
     session_id = str(uuid.uuid4())
     print(session_id)
@@ -116,7 +111,20 @@ def serve_layout():
                             # html.H4(id='card_title_1', children=['Abstract'], className='card-title',
                             #        style=CARD_TEXT_STYLE),
                             html.P(id='card_text_1', children=[
-                                'The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and efficient numerical performance, which are used to fit the reflection and transmission responses. It is capable of extracting the unloaded quality factor and resonant frequency of microwave resonators from two-port S-parameters in any Touchstone format. The algorithm performs an adaptive outlier removal to discard measurement points affected by distortion caused by defects in the device or in the experimental setup. An extensive error analysis relating network analyzer capabilities with errors in the extracted parameters showed that errors below 1% in the unloaded quality factor are feasible with this algorithm. The source code is written in Python 3.7.7 using open source packages and can be downloaded using the download button for offline usage. For more information and a more detailed explanation of the algorithm we refer to the publication accesible over the DOI link. Please cite the publication if using this web application or the source code.'], ),
+                                'The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and '
+                                'efficient numerical performance, which are used to fit the reflection and '
+                                'transmission responses. It is capable of extracting the unloaded quality factor and '
+                                'resonant frequency of microwave resonators from two-port S-parameters in any '
+                                'Touchstone format. The algorithm performs an adaptive outlier removal to discard '
+                                'measurement points affected by distortion caused by defects in the device or in '
+                                'the experimental setup. An extensive error analysis relating network analyzer '
+                                'capabilities with errors in the extracted parameters showed that errors below 1% in '
+                                'the unloaded quality factor are feasible with this algorithm. The source code is '
+                                'written in Python 3.7.7 using open source packages and can be downloaded using the '
+                                'download button for offline usage. For more information and a more detailed '
+                                'explanation of the algorithm we refer to the publication accesible over the DOI '
+                                'link. Please cite the publication if using this web application or the source '
+                                'code.'], ),
                         ]
                     )
                 ]
@@ -234,7 +242,11 @@ def serve_layout():
         style=SIDEBAR_STYLE,
     )
 
-    layout = html.Div([sidebar, content, dcc.Store(id='memory')])
+    stores = html.Div([
+        dcc.Store(id='tdict', storage_type='session'),
+    ])
+
+    layout = html.Div([sidebar, content, stores])
 
     return layout
 
@@ -276,7 +288,7 @@ def file_download_link(filename, session_id):
 
 suppress_callback_exceptions=True
 @app.callback(
-    Output("file-list", "children"),
+    [Output("file-list", "children")],
     [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")],
 )
 def update_output(uploaded_filenames, uploaded_file_contents,session_id):
@@ -316,7 +328,8 @@ def update_output(uploaded_filenames, uploaded_file_contents,session_id):
 
 
 @app.callback([Output('name-dropdown', 'options'), Output('numberoffiles', 'children')],
-              [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")])
+              [Input("upload-data", "filename"), Input("upload-data", "contents"),
+               Input("session-id", "children")])
 def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
 
     if uploaded_filenames is not None and uploaded_file_contents is not None:
@@ -342,11 +355,12 @@ def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
 #     time.sleep(1)
 #     return n_clicks
 
-@app.callback([dash.dependencies.Output('Dictionary', 'children'),dash.dependencies.Output('loading', 'children'),dash.dependencies.Output("final-results", "children")],
-    [dash.dependencies.Input('button-calculate', 'n_clicks'),Input("session-id", "children")])
+@app.callback([Output('tdict', 'data'),Output('loading', 'children'),Output("final-results", "children")],
+    [Input('button-calculate', 'n_clicks'),Input("session-id", "children"), Input('tdict', 'data')])
 
-def update_output(click,session_id):
+def update_output(click,session_id, tdict):
     print(click)
+    tdict = tdict or {}
     codedone = ''
     DataToSave = None
 
@@ -363,8 +377,8 @@ def update_output(click,session_id):
                 executionstats.close()
 
                 for k in range(len(ListofFiles)):
-                    TDict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
-                return TDict, codedone, html.Div(
+                    tdict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
+                return tdict, codedone, html.Div(
                     [
                         dash_table.DataTable(
                             data=DataToSave.to_dict("rows"),
@@ -379,7 +393,7 @@ def update_output(click,session_id):
 
 @app.callback(
     Output("theq-chart", "figure"),
-    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"),Input('tdict', 'data'),Input('name-dropdown', 'value'),]
 )
 def update_theq_chart(session_id,TDict,selector):
     """ This is the part where the Data is prepared and calculated for the chart """
@@ -443,7 +457,7 @@ def update_theq_chart(session_id,TDict,selector):
 
 @app.callback(
     Output("refl-chart", "figure"),
-    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"),Input('tdict', 'data'),Input('name-dropdown', 'value'),]
 )
 def update_theq_reflchart(session_id,TDictRef,selector):
     """ This is the part where the Data is prepared and calculated for the chart """
@@ -544,7 +558,7 @@ def update_theq_reflchart(session_id,TDictRef,selector):
 
 @app.callback(
     Output("S21-chart", "figure"),
-    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"),Input('tdict', 'data'),Input('name-dropdown', 'value'),]
 )
 def update_theq_chart(session_id,TDicttran,selector):
     """ This is the part where the Data is prepared and calculated for the chart """
