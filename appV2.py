@@ -104,16 +104,27 @@ def serve_layout():
           ),
       ]
   )
-  
+
   content_first_row = dbc.Row([
       dbc.Col(
           dbc.Card(
               [
                   dbc.CardBody(
                       [
-                         # html.H4(id='card_title_1', children=['Abstract'], className='card-title',
-                          #        style=CARD_TEXT_STYLE),
-                          html.P(id='card_text_1', children=['The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and efficient numerical performance, which are used to fit the reflection and transmission responses. It is capable of extracting the unloaded quality factor and resonant frequency of microwave resonators from two-port S-parameters in any Touchstone format. The algorithm performs an adaptive outlier removal to discard measurement points affected by distortion caused by defects in the device or in the experimental setup. An extensive error analysis relating network analyzer capabilities with errors in the extracted parameters showed that errors below 1% in the unloaded quality factor are feasible with this algorithm. The source code is written in Python 3.7.7 using open source packages and can be downloaded using the download button for offline usage. For more information and a more detailed explanation of the algorithm we refer to the publication accesible over the DOI link. Please cite the publication if using this web application or the source code.'],),
+                          html.P(id='card_text_1', children=[
+                              'The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and '
+                              'efficient numerical performance, which are used to fit the reflection and transmission'
+                              ' responses. It is capable of extracting the unloaded quality factor and resonant '
+                              'frequency of microwave resonators from two-port S-parameters in any Touchstone format.'
+                              ' The algorithm performs an adaptive outlier removal to discard measurement points '
+                              'affected by distortion caused by defects in the device or in the experimental setup. '
+                              'An extensive error analysis relating network analyzer capabilities with errors in the '
+                              'extracted parameters showed that errors below 1% in the unloaded quality factor are '
+                              'feasible with this algorithm. The source code is written in Python 3.7.7 using open '
+                              'source packages and can be downloaded using the download button for offline usage. '
+                              'For more information and a more detailed explanation of the algorithm we refer to the '
+                              'publication accesible over the DOI link. Please cite the publication if using this '
+                              'web application or the source code.'], ),
                       ]
                   )
               ]
