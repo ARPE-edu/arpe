@@ -42,208 +42,202 @@ TDict = {}
 TDictRefl = {}
 amountoffiles = []
 
-def serve_layout():
-  session_id = str(uuid.uuid4())
-  print(session_id)
-  # the style arguments for the sidebar.
-  SIDEBAR_STYLE = {
-      'position': 'fixed',
-      'top': 0,
-      'left': 0,
-      'bottom': 0,
-      'width': '20%',
-      'padding': '20px 10px',
-      'background-color': '#f8f9fa'
-  }
 
-  # the style arguments for the main content page.
-  CONTENT_STYLE = {
-      'margin-left': '25%',
-      'margin-right': '5%',
-      'top': 0,
-      'padding': '20px 10px'
-  }
-  
-  TEXT_STYLE = {
-      'textAlign': 'center',
-      'color': '#191970'
-  }
-  
-  CARD_TEXT_STYLE = {
-      'textAlign': 'center',
-      'color': '#0074D9'
-  }
-  
-  
-  content_fourth_row = dbc.Row(
-      [
-          dbc.Col(
-              html.Div(
-                  id='final-results'
-              ),md=12,
-          )
-      ]
-  )
-  
-  content_third_row = dbc.Row(
-      [
-          dbc.Col(
-              dcc.Graph(id='theq-chart'), md=12,
-          )
-      ]
-  )
-  
-  
-  content_second_row = dbc.Row(
-      [
-          dbc.Col(
-              dcc.Graph(id='refl-chart'), md=6
-          ),
-          dbc.Col(
-              dcc.Graph(id='S21-chart'), md=6
-          ),
-      ]
-  )
-  
-  content_first_row = dbc.Row([
-      dbc.Col(
-          dbc.Card(
-              [
-                  dbc.CardBody(
-                      [
-                         # html.H4(id='card_title_1', children=['Abstract'], className='card-title',
-                          #        style=CARD_TEXT_STYLE),
-                          html.P(id='card_text_1', children=['The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and efficient numerical performance, which are used to fit the reflection and transmission responses. It is capable of extracting the unloaded quality factor and resonant frequency of microwave resonators from two-port S-parameters in any Touchstone format. The algorithm performs an adaptive outlier removal to discard measurement points affected by distortion caused by defects in the device or in the experimental setup. An extensive error analysis relating network analyzer capabilities with errors in the extracted parameters showed that errors below 1% in the unloaded quality factor are feasible with this algorithm. The source code is written in Python 3.7.7 using open source packages and can be downloaded using the download button for offline usage. For more information and a more detailed explanation of the algorithm we refer to the publication accesible over the DOI link. Please cite the publication if using this web application or the source code.'],),
-                      ]
-                  )
-              ]
-          ),
-          md=12
-      ),
-  ])
-  
-  content = html.Div(
-      [
-          html.H1('Algorithm for Resonator Parameter Extraction with Outlier Removal', style=TEXT_STYLE),
-          html.H4("by Patrick Krkoti" + u"\u0107" + ", Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan"),
-          html.H5("Publication submitted to IEEE Transactions on Microwave Theory and Techniques"),
-          #html.Div('your SessionID is: {}'.format(session_id)),
-          html.Div(session_id, id='session-id', style={'display': 'none'}),
-          html.Hr(),
-          content_first_row,
-          content_second_row,
-          content_third_row,
-          content_fourth_row
-      ],
-      style=CONTENT_STYLE
-  )
-  
-  controls = dbc.FormGroup(
-      [
-          html.Br(),
-          html.H3("Upload", style={'textAlign': 'center'}),
-                  html.Div('We recommend the uploaded data to include only one single maximum in the magnitude of S21.'),
-                  dcc.Upload(
-                      id="upload-data",
-                      children=html.Div(
-                          ["Drag and drop or click to upload .s2p files."]
-                      ),
-                      style={
-                          "width": "98%",
-                          "height": "60px",
-                          "lineHeight": "60px",
-                          "borderWidth": "1px",
-                          "borderStyle": "dashed",
-                          "borderRadius": "5px",
-                          "textAlign": "center",
-                          # "margin": "10px",
-                      },
-                      multiple=True,
-                  ),
-          html.Div(id="numberoffiles"),
-          html.Ul(id="Dictionary"),
-          html.Div(id="code-finished"),
-          html.Div(
-          [
-          dbc.Button(
-              id='button-calculate',
-              n_clicks=0,
-              children='Calculate',
-              color='primary',
-              block=True
-          ),
-          dbc.Spinner(html.Div(id='loading'), color='primary'),
-          ]),
-          html.Br(),
-          html.H3('List of Files', style={
-              'textAlign': 'center'
-          }),
-          dcc.Dropdown(
-              id='name-dropdown',
-              options=[
-              ],
-              searchable = True,
-              placeholder = 'Select your results',  # default value
-              multi=False
-          ),
-          dbc.Button(
-          id='',
-          n_clicks=0,
-          children='Download Results',
-          color='primary',
-          block=True
-          ),
-          html.Br(),
-          html.P(id='',children=['Comment: The source code and results buttons will be available after the decision of the reviewers have been taken.']),
-          html.Br(),
-          html.H3('Source Code', style={
-                      'textAlign': 'center'
-                  }),
-              dbc.Button(
-                  id='',
-                  n_clicks=0,
-                  children='Download Source Code',
-                  color='primary',
-                  block=True
-              ),
-          html.Br(),
-          html.Img(
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_UPC.svg/110px-Logo_UPC.svg.png",
-                  style={
-                      'height':'25%',
-                      'width':'25%',
-                      'float':'center',
-                      'position':'relative'
-                      # 'textAlign':'center'
-                  },
-              ),
-  
-          html.Img(
-                  src="https://www.cells.es/logo.png",
-                  style={
-                      'height': '50%',
-                      'width': '50%',
-                      'float': 'center',
-                      # 'textAlign':'right'
-                      'position': 'relative'
-                  },
-              ),
-      ]
-  )
-  
-  
-  sidebar = html.Div(
-      [
-          html.H1('ARPE', style=TEXT_STYLE),
-          html.Hr(),
-          controls
-      ],
-      style=SIDEBAR_STYLE,
-  )
-  
-  layout = html.Div([sidebar, content])
-  
-  return layout
+def serve_layout():
+    session_id = str(uuid.uuid4())
+    print(session_id)
+    ### We are counting the amount of visitors on the page without tracking any information ###
+    visitor = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "wb")
+
+    # the style arguments for the sidebar.
+    SIDEBAR_STYLE = {
+        'position': 'fixed',
+        'top': 0,
+        'left': 0,
+        'bottom': 0,
+        'width': '20%',
+        'padding': '20px 10px',
+        'background-color': '#f8f9fa'
+    }
+
+    # the style arguments for the main content page.
+    CONTENT_STYLE = {
+        'margin-left': '25%',
+        'margin-right': '5%',
+        'top': 0,
+        'padding': '20px 10px'
+    }
+
+    TEXT_STYLE = {
+        'textAlign': 'center',
+        'color': '#191970'
+    }
+
+    CARD_TEXT_STYLE = {
+        'textAlign': 'center',
+        'color': '#0074D9'
+    }
+
+    content_fourth_row = dbc.Row(
+        [
+            dbc.Col(
+                html.Div(
+                    id='final-results'
+                ), md=12,
+            )
+        ]
+    )
+
+    content_third_row = dbc.Row(
+        [
+            dbc.Col(
+                dcc.Graph(id='theq-chart'), md=12,
+            )
+        ]
+    )
+
+    content_second_row = dbc.Row(
+        [
+            dbc.Col(
+                dcc.Graph(id='refl-chart'), md=6
+            ),
+            dbc.Col(
+                dcc.Graph(id='S21-chart'), md=6
+            ),
+        ]
+    )
+
+    content_first_row = dbc.Row([
+        dbc.Col(
+            dbc.Card(
+                [
+                    dbc.CardBody(
+                        [
+                            # html.H4(id='card_title_1', children=['Abstract'], className='card-title',
+                            #        style=CARD_TEXT_STYLE),
+                            html.P(id='card_text_1', children=[
+                                'The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and efficient numerical performance, which are used to fit the reflection and transmission responses. It is capable of extracting the unloaded quality factor and resonant frequency of microwave resonators from two-port S-parameters in any Touchstone format. The algorithm performs an adaptive outlier removal to discard measurement points affected by distortion caused by defects in the device or in the experimental setup. An extensive error analysis relating network analyzer capabilities with errors in the extracted parameters showed that errors below 1% in the unloaded quality factor are feasible with this algorithm. The source code is written in Python 3.7.7 using open source packages and can be downloaded using the download button for offline usage. For more information and a more detailed explanation of the algorithm we refer to the publication accesible over the DOI link. Please cite the publication if using this web application or the source code.'], ),
+                        ]
+                    )
+                ]
+            ),
+            md=12
+        ),
+    ])
+
+    content = html.Div(
+        [
+            html.H1(
+                'Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses',
+                style=TEXT_STYLE),
+            html.H4("by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan"),
+            html.H5("Publication submitted to IEEE Transactions on Microwave Theory and Techniques"),
+            # html.Div('your SessionID is: {}'.format(session_id)),
+            html.Div(session_id, id='session-id', style={'display': 'none'}),
+            html.Hr(),
+            content_first_row,
+            content_second_row,
+            content_third_row,
+            content_fourth_row,
+            dcc.ConfirmDialog(
+                id='confirm',
+                message='The webpage is still being under development.', )
+        ],
+        style=CONTENT_STYLE
+    )
+
+    controls = dbc.FormGroup(
+        [
+            html.Br(),
+            html.H3("Upload", style={'textAlign': 'center'}),
+            # html.Div('Upload your data in .s2p Touchstone format.'),
+            dcc.Upload(
+                id="upload-data",
+                children=html.Div(
+                    ["Drag and drop or click to upload .s2p files."]
+                ),
+                style={
+                    "width": "98%",
+                    "height": "60px",
+                    "lineHeight": "60px",
+                    "borderWidth": "1px",
+                    "borderStyle": "dashed",
+                    "borderRadius": "5px",
+                    "textAlign": "center",
+                    # "margin": "10px",
+                },
+                multiple=True,
+            ),
+            html.Div(id="numberoffiles"),
+            html.Ul(id="Dictionary"),
+            html.Div(id="code-finished"),
+            html.Div(
+                [
+                    dbc.Button(
+                        id='button-calculate',
+                        n_clicks=0,
+                        children='Calculate',
+                        color='primary',
+                        block=True
+                    ),
+                    dbc.Spinner(html.Div(id='loading'), color='primary'),
+                ]),
+            html.Br(),
+            html.H3('List of Files', style={
+                'textAlign': 'center'
+            }),
+            dcc.Dropdown(
+                id='name-dropdown',
+                options=[
+                ],
+                # value=['value1'],  # default value
+                # multi=False
+            ),
+            # html.Br(),
+            # html.P(id='',children=['Comment: The source code and results buttons will be available after the decision of the reviewers have been taken.']),
+            html.Br(),
+            html.H3('Source Code', style={
+                'textAlign': 'center'
+            }),
+            html.Label(['The code can be downloaded from ', html.A('GitHub', href='https://github.com/ARPE-edu/arpe')]),
+            html.Br(),
+            html.Img(
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_UPC.svg/110px-Logo_UPC.svg.png",
+                style={
+                    'height': '25%',
+                    'width': '25%',
+                    'float': 'center',
+                    'position': 'relative'
+                    # 'textAlign':'center'
+                },
+            ),
+
+            html.Img(
+                src="https://www.cells.es/logo.png",
+                style={
+                    'height': '50%',
+                    'width': '50%',
+                    'float': 'center',
+                    # 'textAlign':'right'
+                    'position': 'relative'
+                },
+            ),
+        ]
+    )
+
+    sidebar = html.Div(
+        [
+            html.H1('ARPE', style=TEXT_STYLE),
+            html.Hr(),
+            controls
+        ],
+        style=SIDEBAR_STYLE,
+    )
+
+    layout = html.Div([sidebar, content, dcc.Store(id='memory')])
+
+    return layout
+
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], server=server)
 app.title = 'ARPE'
@@ -265,16 +259,19 @@ def uploaded_files(session_id):
     files = []
     if os.path.exists(os.path.join(UPLOAD_DIRECTORY, session_id)):
         for filename in os.listdir(os.path.join(UPLOAD_DIRECTORY, session_id)):
-            path = os.path.join(UPLOAD_DIRECTORY, session_id, filename)
-            if os.path.isfile(path):
+            if filename.endswith('.s2p') or filename.endswith('.S2P'):
                 files.append(filename)
-                print(filename)
+                print('These are the files' + str(files))
+        ### We count the amount of files uploaded to be able to estimate the computing power needed ###
+        filestats = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "w")
+        filestats.write(str(len(files)))
+        filestats.close()
     return files
 
 
-def file_download_link(filename,session_id):
+def file_download_link(filename, session_id):
     """Create a Plotly Dash 'A' element that downloads a file from the app."""
-    location = "/download/{}/{}".format(urlquote(session_id),urlquote(filename))
+    location = "/download/{}/{}".format(urlquote(session_id), urlquote(filename))
     return html.A(filename, href=location)
 
 suppress_callback_exceptions=True
@@ -352,21 +349,22 @@ def update_output(click,session_id):
     print(click)
     codedone = ''
     DataToSave = None
+
     if isinstance(click, int):
         if click > 0:
             if os.path.exists(os.path.join(conf.dashapp["uploaddir"], session_id)):
-                (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave) = q_mh.TheQFuntion(os.path.join(conf.dashapp["uploaddir"], session_id))
-                print('something')
+                (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave) = q_mh.TheQFuntion(
+                    os.path.join(conf.dashapp["uploaddir"], session_id))
+                print(ListofFiles)
                 codedone = 'The calculations are finished'
-                f = open("TheQ-Results","w")
-                f.write(str(DataToSave))
-                f.close()
+                ### We count the amount of executions per visit ###
+                executionstats = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "a")
+                executionstats.write('\t' + str(click))
+                executionstats.close()
 
-                print("Data Saved")
                 for k in range(len(ListofFiles)):
                     TDict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
-                    # TDictRefl[ListofFiles[k]] = [WCCFXList[k], PlotDataListReflection[k]]
-                return TDict,codedone,html.Div(
+                return TDict, codedone, html.Div(
                     [
                         dash_table.DataTable(
                             data=DataToSave.to_dict("rows"),
@@ -377,6 +375,7 @@ def update_output(click,session_id):
                 )
         else:
             return [None,None,None]
+
 
 @app.callback(
     Output("theq-chart", "figure"),
@@ -423,23 +422,24 @@ def update_theq_chart(session_id,TDict,selector):
             {
                 'x': WRS21,
                 'y': WIS21,
-               'name': 'S21 fit',
+                'name': 'S21 fit',
                 'mode': 'line',
                 'marker': {'size': 7, "color": 'red'},
             },
         ],
-        'layout': {
-            'clickmode': 'event+select',
-            'xaxis': dict(
-                title='Re(S21)'
-            ),
-            'yaxis': dict(
-                scaleanchor="x",
-                scaleratio=1,
-                title='Im(S21)'
-            )
-        }
+        'layout': {'title': 'Transmission Circle Fit',
+                   'clickmode': 'event+select',
+                   'xaxis': dict(
+                       title='Re(S21)'
+                   ),
+                   'yaxis': dict(
+                       scaleanchor="x",
+                       scaleratio=1,
+                       title='Im(S21)'
+                   )
+                   }
     }
+
 
 @app.callback(
     Output("refl-chart", "figure"),
@@ -494,7 +494,7 @@ def update_theq_reflchart(session_id,TDictRef,selector):
             {
                 'x': WRS11,
                 'y': WIS11,
-               'name': 'S11 fit',
+                'name': 'S11 fit',
                 'mode': 'line',
                 'marker': {'size': 7, "color": 'red'},
             },
@@ -528,18 +528,19 @@ def update_theq_reflchart(session_id,TDictRef,selector):
                 'marker': {'size': 7, "color": 'blue'},
             },
         ],
-        'layout': {
-            'clickmode': 'event+select',
-            'xaxis': dict(
-                title='Re(S)'
-            ),
-            'yaxis': dict(
-                scaleanchor="x",
-                scaleratio=1,
-                title='Im(S)'
-            )
-        }
+        'layout': {'title': 'Reflection Circle Fit',
+                   'clickmode': 'event+select',
+                   'xaxis': dict(
+                       title='Re(S)'
+                   ),
+                   'yaxis': dict(
+                       scaleanchor="x",
+                       scaleratio=1,
+                       title='Im(S)'
+                   )
+                   }
     }
+
 
 @app.callback(
     Output("S21-chart", "figure"),
@@ -581,13 +582,15 @@ def update_theq_chart(session_id,TDicttran,selector):
                 'name': 'S11 input data',
                 'mode': 'line',
                 'marker': {'size': 7, "color": 'blue'},
+                'yaxis': 'y2',
                 'color': 'firebrick'
             },
             {
                 'x': ftr,
                 'y': IS22tr,
-               'name': 'S22 input data',
+                'name': 'S22 input data',
                 'mode': 'line',
+                'yaxis': 'y2',
                 'marker': {'size': 7, "color": 'green'},
             },
             {
@@ -599,15 +602,26 @@ def update_theq_chart(session_id,TDicttran,selector):
             },
         ],
         'layout': {
+            'title': 'S-Parameter',
             'clickmode': 'event+select',
             'xaxis': dict(
-                title='frequency [Hz]'
+                title='Frequency [Hz]'
             ),
             'yaxis': dict(
-                title='S-Paramter [dB]'
+                title=' Transmission [dB]'
+            ),
+            'yaxis2': dict(
+                title='Reflection [dB]',
+                overlaying='y',
+                side='right'
             )
         }
     }
+
+# @app.callback(Output('confirm', 'displayed'),
+#               [Input("session-id", "children")])
+# def display_confirm(value):
+#     return True
 
 """ Run it """
 if __name__ == '__main__':
