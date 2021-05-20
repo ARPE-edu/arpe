@@ -1,9 +1,12 @@
 """
-Novel Algorithm for Resonator Parameter Extraction with Outlier Removal
-by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2020
+Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
+by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
 
 Code written by Patrick Krkotic and Queralt Gallardo
-patrickkrkotic@outlook.de
+arpe-edu@outlook.de
+
+Version 1.0.0
+Contributors:
 
 Developed on Python 3.7.7
 """
@@ -27,23 +30,24 @@ from dash.exceptions import PreventUpdate
 """  This part is for the File Upload """
 UPLOAD_DIRECTORY = conf.dashapp["uploaddir"]
 if not os.path.exists(UPLOAD_DIRECTORY):
-    os.makedirs(UPLOAD_DIRECTORY)
-# Normally, Dash creates its own Flask server internally. By creating our own,
-# we can create a route for downloading files directly:
+   os.makedirs(UPLOAD_DIRECTORY)
 server = Flask(__name__)
-# app = dash.Dash(server=server)
 
 """  This is the Frontent Part  """
-# external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-server = flask.Flask(__name__)  # define flask app.server
 
+server = flask.Flask(__name__) # define flask app.server
 
-# app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server) # call flask server
+TDict = {}
+TDictRefl = {}
+amountoffiles = []
 
 def serve_layout():
     session_id = str(uuid.uuid4())
     print(session_id)
-    ### We are counting the amount of visitors on the page without tracking any information ###
+
+    ### We are counting the amount of visitors of the webpage by counting the amount of session IDs
+    ### created per day without tracking any information
+
     visitor = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "wb")
 
     # the style arguments for the sidebar.
@@ -110,23 +114,24 @@ def serve_layout():
                 [
                     dbc.CardBody(
                         [
-                            # html.H4(id='card_title_1', children=['Abstract'], className='card-title',
-                            #        style=CARD_TEXT_STYLE),
                             html.P(id='card_text_1', children=[
-                                'The algorithm is based on Moore-Penrose pseudo-inverse routines for rapid and '
-                                'efficient numerical performance, which are used to fit the reflection and '
-                                'transmission responses. It is capable of extracting the unloaded quality factor and '
-                                'resonant frequency of microwave resonators from two-port S-parameters in any '
-                                'Touchstone format. The algorithm performs an adaptive outlier removal to discard '
-                                'measurement points affected by distortion caused by defects in the device or in '
-                                'the experimental setup. An extensive error analysis relating network analyzer '
-                                'capabilities with errors in the extracted parameters showed that errors below 1% in '
-                                'the unloaded quality factor are feasible with this algorithm. The source code is '
-                                'written in Python 3.7.7 using open source packages and can be downloaded using the '
-                                'download button for offline usage. For more information and a more detailed '
-                                'explanation of the algorithm we refer to the publication accesible over the DOI '
-                                'link. Please cite the publication if using this web application or the source '
-                                'code.'], ),
+                                'Abstract—We describe an algorithm capable of extracting the unloaded quality factor '
+                                'and the resonant frequency of microwave resonators from vector S-parameters. Both '
+                                'symmetrical (Lorentzian) and asymmetrical (Fano) transmission responses are supported. '
+                                'The algorithm performs an adaptive outlier removal to discard measurement points '
+                                'affected by noise or distortion. It removes the effects caused by imperfections in '
+                                'he device (such as modes with close resonance frequencies or stray coupling between '
+                                'the resonator ports) or the experimental setup (such as lack of isolation or '
+                                'dispersion in the test-set and cables). We present an extensive assessment of the '
+                                'algorithm performance based on a numerical perturbation analysis and on the evaluation '
+                                'of S-parameter fitting results obtained from network analyzer measurements and '
+                                'resonator equivalent circuits. Our results suggest that uncertainty is mainly caused '
+                                'by factors that distort the frequency dependence of the S-parameters, such as cabling '
+                                'and coupling networks and is highly dependent on the device measured. Our perturbation '
+                                'analysis shows improved results with respect to those of previous publications. Our '
+                                'source code is written in Python using open source packages and is publicly available '
+                                'under a freeware license.'
+                           ], ),
                         ]
                     )
                 ]
@@ -141,8 +146,7 @@ def serve_layout():
                 'Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses',
                 style=TEXT_STYLE),
             html.H4("by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan"),
-            html.H5("Publication submitted to IEEE Transactions on Microwave Theory and Techniques"),
-            # html.Div('your SessionID is: {}'.format(session_id)),
+            html.H5("Publication accepted in IEEE Transactions on Microwave Theory and Techniques, to be published soon"),
             html.Div(session_id, id='session-id', style={'display': 'none'}),
             html.Hr(),
             content_first_row,
@@ -174,7 +178,6 @@ def serve_layout():
                     "borderStyle": "dashed",
                     "borderRadius": "5px",
                     "textAlign": "center",
-                    # "margin": "10px",
                 },
                 multiple=True,
             ),
@@ -200,16 +203,12 @@ def serve_layout():
                 id='name-dropdown',
                 options=[
                 ],
-                # value=['value1'],  # default value
-                # multi=False
             ),
-            # html.Br(),
-            # html.P(id='',children=['Comment: The source code and results buttons will be available after the decision of the reviewers have been taken.']),
             html.Br(),
             html.H3('Source Code', style={
                 'textAlign': 'center'
             }),
-            html.Label(['The code can be downloaded from ', html.A('GitHub', href='https://github.com/ARPE-edu/arpe')]),
+            html.Label(['The source code is available in the Git repository ', html.A('ARPE-edu', href='https://github.com/ARPE-edu/arpe')]),
             html.Br(),
             html.Img(
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_UPC.svg/110px-Logo_UPC.svg.png",
@@ -218,7 +217,6 @@ def serve_layout():
                     'width': '25%',
                     'float': 'center',
                     'position': 'relative'
-                    # 'textAlign':'center'
                 },
             ),
 
@@ -228,7 +226,6 @@ def serve_layout():
                     'height': '50%',
                     'width': '50%',
                     'float': 'center',
-                    # 'textAlign':'right'
                     'position': 'relative'
                 },
             ),
@@ -244,11 +241,7 @@ def serve_layout():
         style=SIDEBAR_STYLE,
     )
 
-    stores = html.Div([
-        dcc.Store(id='tdict', storage_type='session'),
-    ])
-
-    layout = html.Div([sidebar, content, stores])
+    layout = html.Div([sidebar, content, dcc.Store(id='memory')])
 
     return layout
 
@@ -274,7 +267,6 @@ def uploaded_files(session_id):
         for filename in os.listdir(os.path.join(UPLOAD_DIRECTORY, session_id)):
             if filename.endswith('.s2p') or filename.endswith('.S2P'):
                 files.append(filename)
-                print('These are the files' + str(files))
         ### We count the amount of files uploaded to be able to estimate the computing power needed ###
         filestats = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "w")
         filestats.write(str(len(files)))
@@ -287,83 +279,49 @@ def file_download_link(filename, session_id):
     location = "/download/{}/{}".format(urlquote(session_id), urlquote(filename))
     return html.A(filename, href=location)
 
-
-suppress_callback_exceptions = True
-
-
+suppress_callback_exceptions=True
 @app.callback(
-    [Output("file-list", "children")],
+    Output("file-list", "children"),
     [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")],
 )
-def update_output(uploaded_filenames, uploaded_file_contents, session_id):
+def update_output(uploaded_filenames, uploaded_file_contents,session_id):
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
             data = data.encode("utf8").split(b";base64,")[1]
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
-    files = uploaded_files(session_id)
-    print(files)
+    files=uploaded_files(session_id)
     if len(files) == 0:
         return [html.Li("No files yet!")]
     else:
-        print("Si")
-        return [html.Li(file_download_link(filename, session_id)) for filename in files]
+        return [html.Li(file_download_link(filename,session_id)) for filename in files]
 
-
-# @app.callback(
-#     Output("file-list", "children"),
-#     [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")])
-# def update_output(uploaded_filenames, uploaded_file_contents, session_id):
-#     """Save uploaded files and regenerate the file list."""
-#     if uploaded_filenames is not None and uploaded_file_contents is not None:
-#         for name, data in zip(uploaded_filenames, uploaded_file_contents):
-#             #print("Saving file")
-#             data = data.encode("utf8").split(b";base64,")[1]
-#             if not os.path.exists(os.path.join(UPLOAD_DIRECTORY, session_id)):
-#                 os.mkdir(os.path.join(UPLOAD_DIRECTORY, session_id))
-#             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
-#                 fp.write(base64.decodebytes(data))
-#
-#     files = uploaded_files(session_id)
-#     print(files)
-#     if len(files) == 0:
-#         return [html.Li("No files yet!")]
-#     else:
-#         return [html.Div(filename) for filename in files]
 
 
 @app.callback([Output('name-dropdown', 'options'), Output('numberoffiles', 'children')],
-              [Input("upload-data", "filename"), Input("upload-data", "contents"),
-               Input("session-id", "children")])
+              [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")])
 def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
+
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
-            # print("Saving file")
             data = data.encode("utf8").split(b";base64,")[1]
             if not os.path.exists(os.path.join(UPLOAD_DIRECTORY, session_id)):
                 os.mkdir(os.path.join(UPLOAD_DIRECTORY, session_id))
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
 
-    files = uploaded_files(session_id)
+    files=uploaded_files(session_id)
     amountoffiles = 'Upload of {} file successfull'.format(len(files))
     if len(files) == 0:
-        return [{'label': i, 'value': i} for i in files], ''
+        return [{'label': i, 'value': i } for i in files],''
     else:
-        # print([{'label': i, 'value': i } for i in files])
-        return [{'label': i, 'value': i} for i in files], amountoffiles
+        return [{'label': i, 'value': i } for i in files],amountoffiles
 
 
-# @app.callback(Output("loading-output-2", "children"), [Input('button-calculate', 'n_clicks')])
-# def input_triggers_nested(n_clicks):
-#     time.sleep(1)
-#     return n_clicks
+@app.callback([dash.dependencies.Output('Dictionary', 'children'),dash.dependencies.Output('loading', 'children'),dash.dependencies.Output("final-results", "children")],
+    [dash.dependencies.Input('button-calculate', 'n_clicks'),Input("session-id", "children")])
 
-@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children")],
-              [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
-def update_output(click, session_id, tdict):
-    print(click)
-    tdict = tdict or {}
+def update_output(click,session_id):
     codedone = ''
     DataToSave = None
 
@@ -372,16 +330,16 @@ def update_output(click, session_id, tdict):
             if os.path.exists(os.path.join(conf.dashapp["uploaddir"], session_id)):
                 (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave) = q_mh.TheQFuntion(
                     os.path.join(conf.dashapp["uploaddir"], session_id))
-                print(ListofFiles)
                 codedone = 'The calculations are finished'
-                ### We count the amount of executions per visit ###
+
+                ### We count the amount of executions per visit without tracking information ###
                 executionstats = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "a")
                 executionstats.write('\t' + str(click))
                 executionstats.close()
 
                 for k in range(len(ListofFiles)):
-                    tdict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
-                return tdict, codedone, html.Div(
+                    TDict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
+                return TDict, codedone, html.Div(
                     [
                         dash_table.DataTable(
                             data=DataToSave.to_dict("rows"),
@@ -391,37 +349,18 @@ def update_output(click, session_id, tdict):
                     ]
                 )
         else:
-            return [None, None, None]
+            return [None,None,None]
 
 
 @app.callback(
     Output("theq-chart", "figure"),
-    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
+    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
 )
-def update_theq_chart(session_id, TDict, selector):
+def update_theq_chart(session_id,TDict,selector):
     """ This is the part where the Data is prepared and calculated for the chart """
-    # filelocation = "C:/Users/Maddi/PycharmProjects/theq/data/devdata"
-    # if not selector is None:
-    # print("Dictionary")
-    # print(TDict)
     if selector == None:
         raise PreventUpdate
     Entry = TDict[selector]
-    # print("Entry")
-    # print(Entry)
-    # plotdata = []
-    # for Entry in selector:
-    #     plotdata.append(TDict[Entry])
-    # print("plotdata[0]")
-    # print(plotdata[0][1][1])
-    # print("plotdata[1]")
-    # print(plotdata[1])
-    # RedFreq = Entry[0][0]
-    # Qloaded = Entry[0][1]
-    # RS21 = plotdata[0][1][0]
-    # IS21 = plotdata[0][1][1]
-    # WRS21 = plotdata[0][1][2]
-    # WIS21 = plotdata[0][1][3]
     RS21 = Entry[1][0]
     IS21 = Entry[1][1]
     WRS21 = Entry[1][2]
@@ -460,32 +399,13 @@ def update_theq_chart(session_id, TDict, selector):
 
 @app.callback(
     Output("refl-chart", "figure"),
-    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
+    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
 )
-def update_theq_reflchart(session_id, TDictRef, selector):
+def update_theq_reflchart(session_id,TDictRef,selector):
     """ This is the part where the Data is prepared and calculated for the chart """
-    # filelocation = "C:/Users/Maddi/PycharmProjects/theq/data/devdata"
-    # if not selector is None:
-    # print("Dictionary")
-    # print(TDict)
     if selector == None:
         raise PreventUpdate
     Entry = TDictRef[selector]
-    # print("Entry")
-    # print(Entry)
-    # plotdata = []
-    # for Entry in selector:
-    #     plotdata.append(TDict[Entry])
-    # print("plotdata[0]")
-    # print(plotdata[0][1][1])
-    # print("plotdata[1]")
-    # print(plotdata[1])
-    # RedFreq = Entry[0][0]
-    # Qloaded = Entry[0][1]
-    # RS21 = plotdata[0][1][0]
-    # IS21 = plotdata[0][1][1]
-    # WRS21 = plotdata[0][1][2]
-    # WIS21 = plotdata[0][1][3]
     RS11 = Entry[1][4]
     IS11 = Entry[1][5]
     WRS11 = Entry[1][6]
@@ -561,32 +481,13 @@ def update_theq_reflchart(session_id, TDictRef, selector):
 
 @app.callback(
     Output("S21-chart", "figure"),
-    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
+    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
 )
-def update_theq_chart(session_id, TDicttran, selector):
+def update_theq_chart(session_id,TDicttran,selector):
     """ This is the part where the Data is prepared and calculated for the chart """
-    # filelocation = "C:/Users/Maddi/PycharmProjects/theq/data/devdata"
-    # if not selector is None:
-    # print("Dictionary")
-    # print(TDict)
     if selector == None:
         raise PreventUpdate
     Entry = TDicttran[selector]
-    # print("Entry")
-    # print(Entry)
-    # plotdata = []
-    # for Entry in selector:
-    #     plotdata.append(TDict[Entry])
-    # print("plotdata[0]")
-    # print(plotdata[0][1][1])
-    # print("plotdata[1]")
-    # print(plotdata[1])
-    # RedFreq = Entry[0][0]
-    # Qloaded = Entry[0][1]
-    # RS21 = plotdata[0][1][0]
-    # IS21 = plotdata[0][1][1]
-    # WRS21 = plotdata[0][1][2]
-    # WIS21 = plotdata[0][1][3]
     ftr = Entry[1][16]
     RS11tr = Entry[1][17]
     IS22tr = Entry[1][18]
@@ -635,7 +536,6 @@ def update_theq_chart(session_id, TDicttran, selector):
         }
     }
 
-
 # @app.callback(Output('confirm', 'displayed'),
 #               [Input("session-id", "children")])
 # def display_confirm(value):
@@ -644,6 +544,6 @@ def update_theq_chart(session_id, TDicttran, selector):
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-    app.run_server(port=8050, debug=False, host='0.0.0.0')
+    #app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
-    # app.run_server(port=8050, debug=False)
+    app.run_server(port=8050, debug=True)
