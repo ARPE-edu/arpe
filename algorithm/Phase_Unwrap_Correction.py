@@ -1,9 +1,12 @@
 """
-Novel Algorithm for Resonator Parameter Extraction with Outlier Removal
-by Patrick Krkotić, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O’Callaghan, 2020
+Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
+by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
 
-Code written by Patrick Krkotić and Queralt Gallardo
-patrickkrkotic@outlook.de
+Code written by Queralt Gallardo and Patrick Krkotic
+arpe-edu@outlook.de
+
+Version 1.0.0
+Contributors:
 
 Developed on Python 3.7.7
 """
@@ -15,7 +18,6 @@ import math
 
 def PhaseUnwrappingCorrection(ring_slot,df):
 
-    PhaseCorrectedSParameter = []
     S11phase = []
     S21phase = []
     S12phase = []
@@ -53,7 +55,7 @@ def PhaseUnwrappingCorrection(ring_slot,df):
             for i in range(len(phase)):
                 phase[i] = math.radians(phase[i]) # Degrees to radians
 
-            disc= False # hi ha discontinuitat o no?
+            disc= False
             for i in range(len(phase)-1):
                 if phase[i+1] - phase[i] >= ((3*np.pi)/2) or phase[i+1] - phase[i] <= -((3*np.pi)/2): # search for phase discontinuity
                     disc= True
@@ -73,9 +75,10 @@ def PhaseUnwrappingCorrection(ring_slot,df):
 
             n = round(0.1 * len(df))
 
-    #################################################
-    #### Phase Correction
-    ##################################################
+#################################################
+#### Phase Correction
+##################################################
+
             ph_ini = phase_unw[:n] # initial 10%
             ph_fin = phase_unw[-n:] # final 10%
             for i in range(len(ph_ini)): # Degrees to radians
@@ -84,11 +87,11 @@ def PhaseUnwrappingCorrection(ring_slot,df):
 
             # Linear regression initial part
             coef_lin_ini = np.polyfit(f[:n], ph_ini[:n], 1)
-            pol_lin_ini = np.poly1d(coef_lin_ini)
+            #pol_lin_ini = np.poly1d(coef_lin_ini)
 
             # Linear regression final part
             coef_lin_fin = np.polyfit(f[-n:], ph_ini[-n:], 1)
-            pol_lin_fin = np.poly1d(coef_lin_fin)
+            #pol_lin_fin = np.poly1d(coef_lin_fin)
 
             # Plot the phase and its linear fitting INITIAL PART
             """
@@ -120,8 +123,6 @@ def PhaseUnwrappingCorrection(ring_slot,df):
 
             for i in range(len(f)):
                 sparamter_r = sparamter * np.exp(2j * math.pi * (tau_med) * f[i])
-
-            #PhaseCorrectedSParameter.append(sparamter_r)
 
             if p == 0:
                 if k == 0:
