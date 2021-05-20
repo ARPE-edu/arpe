@@ -27,7 +27,7 @@ from dash.exceptions import PreventUpdate
 """  This part is for the File Upload """
 UPLOAD_DIRECTORY = conf.dashapp["uploaddir"]
 if not os.path.exists(UPLOAD_DIRECTORY):
-   os.makedirs(UPLOAD_DIRECTORY)
+    os.makedirs(UPLOAD_DIRECTORY)
 # Normally, Dash creates its own Flask server internally. By creating our own,
 # we can create a route for downloading files directly:
 server = Flask(__name__)
@@ -35,7 +35,9 @@ server = Flask(__name__)
 
 """  This is the Frontent Part  """
 # external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-server = flask.Flask(__name__) # define flask app.server
+server = flask.Flask(__name__)  # define flask app.server
+
+
 # app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server) # call flask server
 
 def serve_layout():
@@ -257,7 +259,6 @@ app.config['suppress_callback_exceptions'] = True
 app.layout = serve_layout
 
 
-
 @server.route("/download/<path:path>")
 def download(path):
     """Serve a file from the upload directory."""
@@ -286,24 +287,28 @@ def file_download_link(filename, session_id):
     location = "/download/{}/{}".format(urlquote(session_id), urlquote(filename))
     return html.A(filename, href=location)
 
-suppress_callback_exceptions=True
+
+suppress_callback_exceptions = True
+
+
 @app.callback(
     [Output("file-list", "children")],
     [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")],
 )
-def update_output(uploaded_filenames, uploaded_file_contents,session_id):
+def update_output(uploaded_filenames, uploaded_file_contents, session_id):
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
             data = data.encode("utf8").split(b";base64,")[1]
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
-    files=uploaded_files(session_id)
+    files = uploaded_files(session_id)
     print(files)
     if len(files) == 0:
         return [html.Li("No files yet!")]
     else:
         print("Si")
-        return [html.Li(file_download_link(filename,session_id)) for filename in files]
+        return [html.Li(file_download_link(filename, session_id)) for filename in files]
+
 
 # @app.callback(
 #     Output("file-list", "children"),
@@ -331,23 +336,22 @@ def update_output(uploaded_filenames, uploaded_file_contents,session_id):
               [Input("upload-data", "filename"), Input("upload-data", "contents"),
                Input("session-id", "children")])
 def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
-
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
-            #print("Saving file")
+            # print("Saving file")
             data = data.encode("utf8").split(b";base64,")[1]
             if not os.path.exists(os.path.join(UPLOAD_DIRECTORY, session_id)):
                 os.mkdir(os.path.join(UPLOAD_DIRECTORY, session_id))
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
 
-    files=uploaded_files(session_id)
+    files = uploaded_files(session_id)
     amountoffiles = 'Upload of {} file successfull'.format(len(files))
     if len(files) == 0:
-        return [{'label': i, 'value': i } for i in files],''
+        return [{'label': i, 'value': i} for i in files], ''
     else:
-        #print([{'label': i, 'value': i } for i in files])
-        return [{'label': i, 'value': i } for i in files],amountoffiles
+        # print([{'label': i, 'value': i } for i in files])
+        return [{'label': i, 'value': i} for i in files], amountoffiles
 
 
 # @app.callback(Output("loading-output-2", "children"), [Input('button-calculate', 'n_clicks')])
@@ -355,10 +359,9 @@ def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
 #     time.sleep(1)
 #     return n_clicks
 
-@app.callback([Output('tdict', 'data'),Output('loading', 'children'),Output("final-results", "children")],
-    [Input('button-calculate', 'n_clicks'),Input("session-id", "children"), Input('tdict', 'data')])
-
-def update_output(click,session_id, tdict):
+@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children")],
+              [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
+def update_output(click, session_id, tdict):
     print(click)
     tdict = tdict or {}
     codedone = ''
@@ -388,24 +391,24 @@ def update_output(click,session_id, tdict):
                     ]
                 )
         else:
-            return [None,None,None]
+            return [None, None, None]
 
 
 @app.callback(
     Output("theq-chart", "figure"),
-    [Input("session-id", "children"),Input('tdict', 'data'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
 )
-def update_theq_chart(session_id,TDict,selector):
+def update_theq_chart(session_id, TDict, selector):
     """ This is the part where the Data is prepared and calculated for the chart """
     # filelocation = "C:/Users/Maddi/PycharmProjects/theq/data/devdata"
     # if not selector is None:
-    #print("Dictionary")
-    #print(TDict)
+    # print("Dictionary")
+    # print(TDict)
     if selector == None:
         raise PreventUpdate
     Entry = TDict[selector]
-    #print("Entry")
-    #print(Entry)
+    # print("Entry")
+    # print(Entry)
     # plotdata = []
     # for Entry in selector:
     #     plotdata.append(TDict[Entry])
@@ -457,19 +460,19 @@ def update_theq_chart(session_id,TDict,selector):
 
 @app.callback(
     Output("refl-chart", "figure"),
-    [Input("session-id", "children"),Input('tdict', 'data'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
 )
-def update_theq_reflchart(session_id,TDictRef,selector):
+def update_theq_reflchart(session_id, TDictRef, selector):
     """ This is the part where the Data is prepared and calculated for the chart """
     # filelocation = "C:/Users/Maddi/PycharmProjects/theq/data/devdata"
     # if not selector is None:
-    #print("Dictionary")
-    #print(TDict)
+    # print("Dictionary")
+    # print(TDict)
     if selector == None:
         raise PreventUpdate
     Entry = TDictRef[selector]
     # print("Entry")
-    #print(Entry)
+    # print(Entry)
     # plotdata = []
     # for Entry in selector:
     #     plotdata.append(TDict[Entry])
@@ -558,19 +561,19 @@ def update_theq_reflchart(session_id,TDictRef,selector):
 
 @app.callback(
     Output("S21-chart", "figure"),
-    [Input("session-id", "children"),Input('tdict', 'data'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
 )
-def update_theq_chart(session_id,TDicttran,selector):
+def update_theq_chart(session_id, TDicttran, selector):
     """ This is the part where the Data is prepared and calculated for the chart """
     # filelocation = "C:/Users/Maddi/PycharmProjects/theq/data/devdata"
     # if not selector is None:
-    #print("Dictionary")
-    #print(TDict)
+    # print("Dictionary")
+    # print(TDict)
     if selector == None:
         raise PreventUpdate
     Entry = TDicttran[selector]
-    #print("Entry")
-    #print(Entry)
+    # print("Entry")
+    # print(Entry)
     # plotdata = []
     # for Entry in selector:
     #     plotdata.append(TDict[Entry])
@@ -632,6 +635,7 @@ def update_theq_chart(session_id,TDicttran,selector):
         }
     }
 
+
 # @app.callback(Output('confirm', 'displayed'),
 #               [Input("session-id", "children")])
 # def display_confirm(value):
@@ -640,6 +644,6 @@ def update_theq_chart(session_id,TDicttran,selector):
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-    app.run_server(port=8050,debug=False,host='0.0.0.0')
+    app.run_server(port=8050, debug=False, host='0.0.0.0')
     ####### local environment
-    #app.run_server(port=8050, debug=False)
+    # app.run_server(port=8050, debug=False)
