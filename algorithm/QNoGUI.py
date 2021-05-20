@@ -1,11 +1,22 @@
-from algorithm.TheQ import Q
+"""
+Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
+by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
 
-#filelocation = "C:/Users/Kricx/Documents/GIT/theq/data/devdata"
+Code written by Patrick Krkotic and Queralt Gallardo
+arpe-edu@outlook.de
+
+Version 1.0.0
+Contributors:
+
+Developed on Python 3.7.7
+"""
+
+from algorithm.TheQ import Q
 
 def TheQFuntion(filelocation):
     """
         Currently its a mock
-    :param filelocation: dirictory of input files
+    :param filelocation: directory of input files
     :return: ListofFiles,WCCFXList,PlotDataList,QUnloaded,DataToSave
     """
     print("TheQFunction got path: {}".format(filelocation))

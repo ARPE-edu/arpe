@@ -1,3 +1,18 @@
+"""
+Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
+by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
+
+Code written by Patrick Krkotic and Queralt Gallardo
+arpe-edu@outlook.de
+
+Version 1.0.0
+
+Contributors:
+
+Developed on Python 3.7.7
+"""
+
+
 import skrf as rf
 from pandas import *
 import pandas as pd
@@ -21,11 +36,6 @@ def BandWidthCutter(ring_slot,df,S21):
         xx = x.to_numpy()
         y = df['s_db 21'].values # y = values
 
-        # Linear interpolation
-        flin = interp1d(x, y)
-        newx = np.linspace(df['s_db 21'].index[0], df['s_db 21'].index[len(df['s_db 21'])-1], len(df['s_db 21'])*4000)
-        newylin = flin(newx)
-
         # Find the points at -3dB
         value_3db = max - 3.0
 
@@ -34,14 +44,10 @@ def BandWidthCutter(ring_slot,df,S21):
         yleft = y[0:t[0][0]]
         xright = x[t[0][0]:]
         yright = y[t[0][0]:]
-        #print(value_3db)
 
-        #print("Interpolation")
 
         ff1 = np.interp(value_3db,yleft,xleft)
         ff2 = np.interp(value_3db, np.flip(yright), np.flip(xright))
-        #print(ff1)
-        #print(ff2)
         bw3db = ff2 - ff1
 
         TotalWidth = abs(x[0] - x[-1])
@@ -57,7 +63,6 @@ def BandWidthCutter(ring_slot,df,S21):
             ringright = np.where(xx == x[-1])
             ring_slotcut = ring_slot.s[ringleft[0][0]:ringright[0][0] + 1, 1, 0]
             S21cut = S21[ringleft[0][0]:ringright[0][0] + 1]
-
 
         else:
             df = df
@@ -83,12 +88,6 @@ def BandWidthCutterTwo(ring_slot, df):
     xx = x.to_numpy()
     y = df['s_db 21'].values # y = values
 
-    # Linear interpolation
-    flin = interp1d(x, y)
-    newx = np.linspace(df['s_db 21'].index[0], df['s_db 21'].index[len(df['s_db 21'])-1], len(df['s_db 21'])*4000)
-
-    # Find the points at -3dB
-    #value_10db = max - 10
     value_10db = max - 3
 
     t = np.where(y == max)
@@ -101,12 +100,8 @@ def BandWidthCutterTwo(ring_slot, df):
 
     ff1 = np.interp(value_10db,yleft,xleft)
     ff2 = np.interp(value_10db, np.flip(yright), np.flip(xright))
-    #print(ff1)
-    #print(ff2)
     bw10db = ff2 - ff1
-    #print(len(df))
     if TotalWidth > bw10db:
-        #print(" Bandwidth Cut Activated ")
         Left = fo - 0.5 * bw10db
         Right = fo + 0.5 * bw10db
         x = x[(x >= Left) & (x <= Right)]
@@ -122,5 +117,4 @@ def BandWidthCutterTwo(ring_slot, df):
         ring_slotcut11 = ring_slot.s[:, 0, 0]
         ring_slotcut22 = ring_slot.s[:, 1, 1]
 
-    #print(len(df))
     return ring_slotcut11,ring_slotcut22,df
