@@ -35,6 +35,7 @@ server = Flask(__name__)
 
 """  This is the Frontent Part  """
 
+
 server = flask.Flask(__name__) # define flask app.server
 
 def serve_layout():
@@ -174,7 +175,6 @@ def serve_layout():
                     "borderStyle": "dashed",
                     "borderRadius": "5px",
                     "textAlign": "center",
-                    # "margin": "10px",
                 },
                 multiple=True,
             ),
@@ -294,11 +294,13 @@ def update_output(uploaded_filenames, uploaded_file_contents, session_id):
             data = data.encode("utf8").split(b";base64,")[1]
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
+
     files = uploaded_files(session_id)
     if len(files) == 0:
         return [html.Li("No files yet!")]
     else:
         return [html.Li(file_download_link(filename, session_id)) for filename in files]
+
 
 
 
@@ -325,6 +327,15 @@ def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
 @app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children")],
               [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
 def update_output(click, session_id, tdict):
+
+        return [{'label': i, 'value': i } for i in files],amountoffiles
+
+
+@app.callback([dash.dependencies.Output('Dictionary', 'children'),dash.dependencies.Output('loading', 'children'),dash.dependencies.Output("final-results", "children")],
+    [dash.dependencies.Input('button-calculate', 'n_clicks'),Input("session-id", "children")])
+
+def update_output(click,session_id):
+
     codedone = ''
     DataToSave = None
     tdict = tdict or {}
