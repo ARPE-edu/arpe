@@ -35,11 +35,8 @@ server = Flask(__name__)
 
 """  This is the Frontent Part  """
 
-server = flask.Flask(__name__) # define flask app.server
 
-TDict = {}
-TDictRefl = {}
-amountoffiles = []
+server = flask.Flask(__name__) # define flask app.server
 
 def serve_layout():
     session_id = str(uuid.uuid4())
@@ -241,7 +238,11 @@ def serve_layout():
         style=SIDEBAR_STYLE,
     )
 
-    layout = html.Div([sidebar, content, dcc.Store(id='memory')])
+    stores = html.Div([
+        dcc.Store(id='tdict', storage_type='session'),
+    ])
+
+    layout = html.Div([sidebar, content, stores])
 
     return layout
 
@@ -279,29 +280,34 @@ def file_download_link(filename, session_id):
     location = "/download/{}/{}".format(urlquote(session_id), urlquote(filename))
     return html.A(filename, href=location)
 
-suppress_callback_exceptions=True
+
+suppress_callback_exceptions = True
+
+
 @app.callback(
-    Output("file-list", "children"),
+    [Output("file-list", "children")],
     [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")],
 )
-def update_output(uploaded_filenames, uploaded_file_contents,session_id):
+def update_output(uploaded_filenames, uploaded_file_contents, session_id):
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
             data = data.encode("utf8").split(b";base64,")[1]
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
-    files=uploaded_files(session_id)
+
+    files = uploaded_files(session_id)
     if len(files) == 0:
         return [html.Li("No files yet!")]
     else:
-        return [html.Li(file_download_link(filename,session_id)) for filename in files]
+        return [html.Li(file_download_link(filename, session_id)) for filename in files]
+
 
 
 
 @app.callback([Output('name-dropdown', 'options'), Output('numberoffiles', 'children')],
-              [Input("upload-data", "filename"), Input("upload-data", "contents"), Input("session-id", "children")])
+              [Input("upload-data", "filename"), Input("upload-data", "contents"),
+               Input("session-id", "children")])
 def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
-
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
             data = data.encode("utf8").split(b";base64,")[1]
@@ -310,20 +316,21 @@ def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
             with open(os.path.join(UPLOAD_DIRECTORY, session_id, name), "wb") as fp:
                 fp.write(base64.decodebytes(data))
 
-    files=uploaded_files(session_id)
+    files = uploaded_files(session_id)
     amountoffiles = 'Upload of {} file successfull'.format(len(files))
     if len(files) == 0:
-        return [{'label': i, 'value': i } for i in files],''
+        return [{'label': i, 'value': i} for i in files], ''
     else:
-        return [{'label': i, 'value': i } for i in files],amountoffiles
+        return [{'label': i, 'value': i} for i in files], amountoffiles
 
 
-@app.callback([dash.dependencies.Output('Dictionary', 'children'),dash.dependencies.Output('loading', 'children'),dash.dependencies.Output("final-results", "children")],
-    [dash.dependencies.Input('button-calculate', 'n_clicks'),Input("session-id", "children")])
+@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children")],
+              [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
+def update_output(click,session_id, tdict):
 
-def update_output(click,session_id):
     codedone = ''
     DataToSave = None
+    tdict = tdict or {}
 
     if isinstance(click, int):
         if click > 0:
@@ -338,8 +345,8 @@ def update_output(click,session_id):
                 executionstats.close()
 
                 for k in range(len(ListofFiles)):
-                    TDict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
-                return TDict, codedone, html.Div(
+                    tdict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
+                return tdict, codedone, html.Div(
                     [
                         dash_table.DataTable(
                             data=DataToSave.to_dict("rows"),
@@ -349,14 +356,14 @@ def update_output(click,session_id):
                     ]
                 )
         else:
-            return [None,None,None]
+            return [None, None, None]
 
 
 @app.callback(
     Output("theq-chart", "figure"),
-    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
 )
-def update_theq_chart(session_id,TDict,selector):
+def update_theq_chart(session_id, TDict, selector):
     """ This is the part where the Data is prepared and calculated for the chart """
     if selector == None:
         raise PreventUpdate
@@ -399,9 +406,9 @@ def update_theq_chart(session_id,TDict,selector):
 
 @app.callback(
     Output("refl-chart", "figure"),
-    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
 )
-def update_theq_reflchart(session_id,TDictRef,selector):
+def update_theq_reflchart(session_id, TDictRef, selector):
     """ This is the part where the Data is prepared and calculated for the chart """
     if selector == None:
         raise PreventUpdate
@@ -481,9 +488,9 @@ def update_theq_reflchart(session_id,TDictRef,selector):
 
 @app.callback(
     Output("S21-chart", "figure"),
-    [Input("session-id", "children"),Input('Dictionary', 'children'),Input('name-dropdown', 'value'),]
+    [Input("session-id", "children"), Input('tdict', 'data'), Input('name-dropdown', 'value'), ]
 )
-def update_theq_chart(session_id,TDicttran,selector):
+def update_theq_chart(session_id, TDicttran, selector):
     """ This is the part where the Data is prepared and calculated for the chart """
     if selector == None:
         raise PreventUpdate
@@ -535,6 +542,7 @@ def update_theq_chart(session_id,TDicttran,selector):
             )
         }
     }
+
 
 # @app.callback(Output('confirm', 'displayed'),
 #               [Input("session-id", "children")])
