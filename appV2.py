@@ -110,9 +110,9 @@ def serve_layout():
             dbc.Card(
                 [
                     dbc.CardBody(
-                        [
+                        [  html.H5("Abstract"),
                             html.P(id='card_text_1', children=[
-                                'Abstract—We describe an algorithm capable of extracting the unloaded quality factor '
+                                'We describe an algorithm capable of extracting the unloaded quality factor '
                                 'and the resonant frequency of microwave resonators from vector S-parameters. Both '
                                 'symmetrical (Lorentzian) and asymmetrical (Fano) transmission responses are supported. '
                                 'The algorithm performs an adaptive outlier removal to discard measurement points '
@@ -143,7 +143,8 @@ def serve_layout():
                 'Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses',
                 style=TEXT_STYLE),
             html.H4("by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan"),
-            html.H5("Publication accepted in IEEE Transactions on Microwave Theory and Techniques, to be published soon"),
+            html.H5(["Publication accepted in IEEE Transactions on Microwave Theory and Techniques.  DOI:",html.A('10.1109/TMTT.2021.3081730', href='https://doi.org/10.1109/TMTT.2021.3081730')]),
+            html.H5(["Manuscript available at ",html.A('UPCCommons', href='https://upcommons.upc.edu/urlFiles?idDrac=31808583')]),
             html.Div(session_id, id='session-id', style={'display': 'none'}),
             html.Hr(),
             content_first_row,
@@ -193,7 +194,7 @@ def serve_layout():
                     dbc.Spinner(html.Div(id='loading'), color='primary'),
                 ]),
             html.Br(),
-            html.H3('List of Files', style={
+            html.H3('Choose File to Plot', style={
                 'textAlign': 'center'
             }),
             dcc.Dropdown(
@@ -552,6 +553,6 @@ def update_theq_chart(session_id, TDicttran, selector):
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-    #app.run_server(port=8050,debug=False,host='0.0.0.0')
+    app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
-    app.run_server(port=8050, debug=True)
+    #app.run_server(port=8050, debug=True)
