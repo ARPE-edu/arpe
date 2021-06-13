@@ -7,6 +7,7 @@ arpe-edu@outlook.de
 
 Version 1.0.0
 Contributors:
+Agustin Gomez Mansilla
 
 Developed on Python 3.7.7
 """
@@ -153,7 +154,7 @@ def serve_layout():
             content_fourth_row,
             dcc.ConfirmDialog(
                 id='confirm',
-                message='The webpage is still being under development.', )
+                message='Some files could not be processed!', )
         ],
         style=CONTENT_STYLE
     )
@@ -241,6 +242,7 @@ def serve_layout():
 
     stores = html.Div([
         dcc.Store(id='tdict', storage_type='session'),
+        dcc.Store(id='Corrupt', storage_type='session'),
     ])
 
     layout = html.Div([sidebar, content, stores])
@@ -303,11 +305,10 @@ def update_output(uploaded_filenames, uploaded_file_contents, session_id):
         return [html.Li(file_download_link(filename, session_id)) for filename in files]
 
 
-
-
-@app.callback([Output('name-dropdown', 'options'), Output('numberoffiles', 'children')],
+@app.callback(Output('numberoffiles', 'children'),
               [Input("upload-data", "filename"), Input("upload-data", "contents"),
                Input("session-id", "children")])
+
 def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
     if uploaded_filenames is not None and uploaded_file_contents is not None:
         for name, data in zip(uploaded_filenames, uploaded_file_contents):
@@ -318,25 +319,27 @@ def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
                 fp.write(base64.decodebytes(data))
 
     files = uploaded_files(session_id)
-    amountoffiles = 'Upload of {} file successfull'.format(len(files))
+    amountoffiles = 'Upload of {} file successful'.format(len(files))
     if len(files) == 0:
-        return [{'label': i, 'value': i} for i in files], ''
+        return ''
     else:
-        return [{'label': i, 'value': i} for i in files], amountoffiles
+        return amountoffiles
 
 
-@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children")],
+@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children"), Output('Corrupt', 'data'),Output('name-dropdown', 'options')],
               [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
 def update_output(click,session_id, tdict):
 
     codedone = ''
     DataToSave = None
     tdict = tdict or {}
+    ListofFiles = None or []
+
 
     if isinstance(click, int):
         if click > 0:
             if os.path.exists(os.path.join(conf.dashapp["uploaddir"], session_id)):
-                (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave) = q_mh.TheQFuntion(
+                (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave, Corrupt) = q_mh.TheQFuntion(
                     os.path.join(conf.dashapp["uploaddir"], session_id))
                 codedone = 'The calculations are finished'
 
@@ -347,6 +350,7 @@ def update_output(click,session_id, tdict):
 
                 for k in range(len(ListofFiles)):
                     tdict[ListofFiles[k]] = [WCCFXList[k], PlotDataList[k]]
+
                 return tdict, codedone, html.Div(
                     [
                         dash_table.DataTable(
@@ -355,9 +359,9 @@ def update_output(click,session_id, tdict):
                             export_format="xlsx",
                         )
                     ]
-                )
+                ), Corrupt, [{'label': i, 'value': i} for i in ListofFiles]
         else:
-            return [None, None, None]
+            return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
 
 
 @app.callback(
@@ -545,14 +549,19 @@ def update_theq_chart(session_id, TDicttran, selector):
     }
 
 
-# @app.callback(Output('confirm', 'displayed'),
-#               [Input("session-id", "children")])
-# def display_confirm(value):
-#     return True
+@app.callback(Output('confirm', 'displayed'),
+              [Input("Corrupt", "data")])
+def display_confirm(value):
+    try:
+        if len(value) > 0:
+            return True
+    except:
+        pass
+    return False
 
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-    app.run_server(port=8050,debug=False,host='0.0.0.0')
+   # app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
-    #app.run_server(port=8050, debug=True)
+    app.run_server(port=8050, debug=True)
