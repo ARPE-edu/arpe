@@ -20,8 +20,8 @@ def TheQFuntion(filelocation):
     :return: ListofFiles,WCCFXList,PlotDataList,QUnloaded,DataToSave
     """
     print("TheQFunction got path: {}".format(filelocation))
-    (ListofFiles,WCCFXList,PlotDataList,QUnloaded,DataToSave) = Q(filelocation)
-    return (ListofFiles,WCCFXList,PlotDataList,QUnloaded,DataToSave)
+    (ListofFiles,WCCFXList,PlotDataList,QUnloaded,DataToSave,Corrupt) = Q(filelocation)
+    return (ListofFiles,WCCFXList,PlotDataList,QUnloaded,DataToSave,Corrupt)
 
 
 """
