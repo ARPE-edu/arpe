@@ -207,7 +207,7 @@ def serve_layout():
             html.H3('Source Code', style={
                 'textAlign': 'center'
             }),
-            html.Label(['The source code is available in the Git repository : ', html.A('ARPE-edu', href='https://github.com/ARPE-edu/arpe')]),
+            html.Label(['The source code is available in the Git repository ', html.A('ARPE-edu', href='https://github.com/ARPE-edu/arpe')]),
             html.Br(),
             html.Img(
                 src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_UPC.svg/110px-Logo_UPC.svg.png",
