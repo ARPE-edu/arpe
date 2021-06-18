@@ -562,6 +562,6 @@ def display_confirm(value):
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-   # app.run_server(port=8050,debug=False,host='0.0.0.0')
+    app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
-    app.run_server(port=8050, debug=True)
+    #app.run_server(port=8050, debug=True)
