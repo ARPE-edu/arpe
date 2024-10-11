@@ -26,8 +26,9 @@ import pandas as pd
 #### Reading Files of a Folder
 ##############################################################
 
-def Q(basepath):
-
+def Q(filepath):
+    basepath, filename = os.path.split(filepath)
+    ListofFileNames = []
     ListofFiles = []
     ResonantFrequencyGHz = []
     PlotDataListReflection = []
@@ -51,25 +52,14 @@ def Q(basepath):
 
     Corrupt = []
 
-    o = 0
-    for entry in os.listdir(basepath):
-        if entry.endswith(".s2p") or entry.endswith(".S2P"):
-            o += 1
-            if os.path.isfile(os.path.join(basepath, entry)):
-                ListofFiles.append(entry)
-                print(str(o) + '. ' + entry)
-    Dict.ListofFiles = ListofFiles
-
-    ###############################################################
-    #### Prepare the Files into Network Files
-    ###############################################################
-
+    ListofFiles.append(filepath)
+    ListofFileNames.append(filename)
+    
 
     for touchstone in ListofFiles:
         try:
-            ring_slot = rf.Network(os.path.join(basepath, touchstone))
+            ring_slot = rf.Network(touchstone)
             #NetworkList.append(ring_slot)
-
         ###############################################################
         #### Prepare the Network Files into a Panda Dataframe
         ###############################################################
@@ -78,25 +68,25 @@ def Q(basepath):
             df = ring_slot.to_dataframe()
             #DataFrameList.append(df)
 
-            print("All Data Loaded")
-            print("Number of elements " + str(len(ListofFiles)))
+           # print("All Data Loaded")
+           # print("Number of elements " + str(len(ListofFiles)))
 
 
         ###############################################################
         #### Determination of Resonant Frequency
         ###############################################################
-            print("Starting Determination of Resonant Frequency")
+           # print("Starting Determination of Resonant Frequency")
 
         #for df in DataFrameList:
             ResonantFrequencyGHz = PeakValue(df)
-            time.sleep(0.2)
+            # time.sleep(0.2)
 
 
         ###############################################################
         #### Determination of Delta and Complex Circle Fit
         ###############################################################
 
-            print("Starting Weighted Complex Circle Fit")
+           # print("Starting Weighted Complex Circle Fit")
 
 
        # for number in range(len(NetworkList)):
@@ -109,7 +99,7 @@ def Q(basepath):
         #### Beta Function
         ####################################################################################
 
-            print("Starting Determination of Coupling Factors")
+           # print("Starting Determination of Coupling Factors")
 
         #for net in range(len(NetworkList)):
 
@@ -120,7 +110,7 @@ def Q(basepath):
             couplingfactors.append((b1,b2))
             PlotDataListReflection.append((re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List))
 
-            time.sleep(0.2)
+            # time.sleep(0.2)
             PlotDataList.append((reals21, imags21, realwcs21, imagwcs21,re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List))
 
     #    for value in range(len(NetworkList)):
@@ -129,14 +119,14 @@ def Q(basepath):
             PlotDataListWCCFX.append((reals21, imags21, realwcs21, imagwcs21))
             Q0.append(Ql * (1 + b1 + b2))
 
-            print('results')
+           # print('results')
             freq.append(fres)
             quali.append(Ql)
             beta1.append(b1)
             beta2.append(b2)
             quali0.append(Ql * (1 + b1 + b2))
             prozent.append(Percantage)
-            print(ListofFiles)
+           # print(ListofFiles)
             # print(len(freq),len(quali),len(beta1),len(beta2),len(quali0),len(prozent))
         except:
             print("ERROR!")
@@ -144,9 +134,9 @@ def Q(basepath):
             continue
 
 
-    print('Corrpution')
-    print(Corrupt)
-    print(len(ListofFiles))
+   # print('Corrpution')
+   # print(Corrupt)
+   # print(len(ListofFiles))
 
     for corruptfile in Corrupt:
         ListofFiles.remove(corruptfile)
@@ -159,19 +149,20 @@ def Q(basepath):
     #     quali0.append(Q0[i])
     #     prozent.append(PercentageList[i])
 
-    print('results')
-    print(ListofFiles)
-    print(freq)
-    print(quali)
-    print(beta1)
-    print(beta2)
-    print(prozent)
+   # print('results')
+    # print(ListofFiles)
+    # print(freq)
+    # print(quali)
+    # print(beta1)
+    # print(beta2)
+    # print(prozent)
 
-    Data = {"Filenames": ListofFiles, "Resonant Frequency": freq, "Loaded Quality Factor": quali,
+    Data = {"Filenames": ListofFileNames, "Resonant Frequency": freq, "Loaded Quality Factor": quali,
             "Coupling Factor S11": beta1, "Coupling Factor S22": beta2,
             "Unloaded Quality Factor": quali0,
             "Percentage of Data Removed": prozent}
     DataToSave = pd.DataFrame(Data)
 
-    print('Calculations Finished')
-    return ListofFiles, WCCFXList, PlotDataList, Q0, DataToSave , Corrupt
+    # print('Calculations Finished')
+    return ListofFileNames, WCCFXList, PlotDataList, Q0, DataToSave , Corrupt
+

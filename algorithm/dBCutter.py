@@ -28,6 +28,7 @@ import numpy as np
 def BandWidthCutter(ring_slot,df,S21):
     ############################################## MAX - F0 ##########################################################
     try:
+        
         max = df['s_db 21'].max() # Maxim value of S21
         fo = df['s_db 21'].idxmax() # Frequency at the maximum = resonant frequency
 
@@ -51,7 +52,7 @@ def BandWidthCutter(ring_slot,df,S21):
         bw3db = ff2 - ff1
 
         TotalWidth = abs(x[0] - x[-1])
-
+        
         if TotalWidth > 10 * bw3db:
             # print(" Bandwidth Cut Activated ")
             Left = fo - 5 * bw3db
