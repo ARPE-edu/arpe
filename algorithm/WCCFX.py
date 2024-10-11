@@ -59,9 +59,12 @@ def ComplexFit(ring_slot,fo_lf,df,Filename,S21):
     deltaecheck = []
     resfreqcheck = []
 
+    
+
     while Anchor == True:
         NumberofIteration = NumberofIteration + 1
         NumberofIterations.append(NumberofIteration)
+        # print(NumberofIteration)
         col1 = np.append(np.ones(len(im21))*re21, np.zeros(len(re21))*im21)
         col2 = np.append(np.zeros(len(im21))*re21, np.ones(len(re21))*im21)
         col3 = np.append(-2*delta*re21, np.zeros(len(re21))*im21)
@@ -125,10 +128,11 @@ def ComplexFit(ring_slot,fo_lf,df,Filename,S21):
 
         BC = 10
         condis =  (BC*s21max)**(-1)
+        
 
         if  max(Prover) < condis :
             Percantage = (100 - ((100 / Listlength) * len(re21)))
-
+            
             break
         else:
             del s21[Prover.index(max(Prover))]

@@ -91,7 +91,7 @@ def Q(basepath):
             ResonantFrequencyGHz = PeakValue(df)
             time.sleep(0.2)
 
-
+            
         ###############################################################
         #### Determination of Delta and Complex Circle Fit
         ###############################################################
@@ -108,7 +108,7 @@ def Q(basepath):
        ####################################################################################
         #### Beta Function
         ####################################################################################
-
+            
             print("Starting Determination of Coupling Factors")
 
         #for net in range(len(NetworkList)):
@@ -117,9 +117,10 @@ def Q(basepath):
 
             [b1, b2, re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List] = BetaFunction(ring_slot, df, S11[0], S22[0], S21[0], tau, 1, fres,Ql)
 
+           
             couplingfactors.append((b1,b2))
             PlotDataListReflection.append((re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List))
-
+            print('testing')
             time.sleep(0.2)
             PlotDataList.append((reals21, imags21, realwcs21, imagwcs21,re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List))
 
@@ -167,7 +168,7 @@ def Q(basepath):
     print(beta2)
     print(prozent)
 
-    Data = {"Filenames": ListofFiles, "Resonant Frequency": freq, "Loaded Quality Factor": quali,
+    Data = {"Filenames": ListofFiles, "Resonant Frequency [Hz]": freq, "Loaded Quality Factor": quali,
             "Coupling Factor S11": beta1, "Coupling Factor S22": beta2,
             "Unloaded Quality Factor": quali0,
             "Percentage of Data Removed": prozent}

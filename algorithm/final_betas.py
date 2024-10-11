@@ -30,24 +30,25 @@ def BetaFunction(ring_slot,df,phases11_unw,phases22_unw,phase21_unw,tau,MagS21,f
     s22 = 20*log10(np.sqrt(phases22_unw.real ** 2 + phases22_unw.imag**2))
     s21 = 20*log10(np.sqrt(phase21_unw.real ** 2 + phase21_unw.imag**2))
 
-
+    
 # 1. Calculate average in 10% lower frequency range and 90% upper frequency range
-    n = round(0.1 * len(df))
-
+    n = int(round(0.1 * len(df)))
     s11_ini = s11[:n]  # 10% lower frequencies
+    
     s11_fin = s11[-n:]  # 90% upper frequencies
+    
     s11_ = np.concatenate((s11_ini, s11_fin), axis=0)
-
+    
     s22_ini = s22[:n]  # 10% lower frequencies
     s22_fin = s22[-n:]  # 90% upper frequencies
     s22_ = np.concatenate((s22_ini, s22_fin), axis=0)
-
+    
     s11_av_db = mean(s11_)
     s22_av_db = mean(s22_)
-
+    
     s11_av = 10 ** (s11_av_db / 20)
     s22_av = 10 ** (s22_av_db / 20)
-
+    
     L_in_avSC = 1 / s11_av
     L_out_avSC = 1 / s22_av
 
@@ -66,7 +67,7 @@ def BetaFunction(ring_slot,df,phases11_unw,phases22_unw,phase21_unw,tau,MagS21,f
     Wbeta1SC = (1 - L_in_avSC * s11mag) / (L_in_avSC * s11mag + L_out_avSC * s22mag)
     Wbeta2SC = (1 - L_out_avSC * s22mag) / (L_in_avSC * s11mag + L_out_avSC * s22mag)
 
-
+   
     ################################################################### LE CIRLCE
 
     frequencies = df['s_db 21'].index
@@ -95,7 +96,7 @@ def BetaFunction(ring_slot,df,phases11_unw,phases22_unw,phase21_unw,tau,MagS21,f
 
     numberofiterations = 0
     anchor = True
-
+    
     while anchor == True:
         numberofiterations = numberofiterations+1
         circle_fit=True

@@ -3,18 +3,21 @@ Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical T
 by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
 
 Code written by Patrick Krkotic and Queralt Gallardo
-arpe-edu@outlook.de
+Support contact: arpe-edu@outlook.de
 
-Version 1.0.0
+Version 2.0.0
 Contributors:
 Agustin Gomez Mansilla
+Martin Herold
+
 
 Developed on Python 3.7.7
+Updated Python 3.11.9
 """
 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 import flask
@@ -25,7 +28,7 @@ import os
 from urllib.parse import quote as urlquote
 import uuid
 import conf as conf
-import dash_table
+from dash import dash_table
 from dash.exceptions import PreventUpdate
 
 """  This part is for the File Upload """
@@ -33,6 +36,7 @@ UPLOAD_DIRECTORY = conf.dashapp["uploaddir"]
 if not os.path.exists(UPLOAD_DIRECTORY):
    os.makedirs(UPLOAD_DIRECTORY)
 server = Flask(__name__)
+
 
 """  This is the Frontent Part  """
 
@@ -56,7 +60,8 @@ def serve_layout():
         'bottom': 0,
         'width': '20%',
         'padding': '20px 10px',
-        'background-color': '#f8f9fa'
+        # 'background-color': '#f8f9fa'
+        'background-color': '#293e6b'
     }
 
     # the style arguments for the main content page.
@@ -69,7 +74,14 @@ def serve_layout():
 
     TEXT_STYLE = {
         'textAlign': 'center',
-        'color': '#191970'
+        'color': '#293e6b'
+        # 'color':'#ffffff'
+    }
+
+    TEXT_STYLE2 = {
+        'textAlign': 'center',
+        # 'color': '#191970'
+        'color':'#ffffff'
     }
 
     CARD_TEXT_STYLE = {
@@ -90,7 +102,21 @@ def serve_layout():
     content_third_row = dbc.Row(
         [
             dbc.Col(
-                dcc.Graph(id='theq-chart'), md=12,
+                dcc.Graph(id='theq-chart',
+                          config = {
+                                'displayModeBar': True,  # Show the mode bar
+                                # 'modeBarButtonsToRemove': ['toImage'],  # Remove the 'Download' button from the toolbar
+                                'scrollZoom': True,  # Enable zooming with scroll
+                                'displaylogo': False,  # Hide the Plotly logo
+                                'toImageButtonOptions': {
+                                    'format': 'svg', 
+                                    'filename': 'ARPE_Transmission',
+                                    'height': 500,
+                                    'width': 700,
+                                    'scale': 1
+                                }
+                          }
+                          ), md=12,
             )
         ]
     )
@@ -98,10 +124,38 @@ def serve_layout():
     content_second_row = dbc.Row(
         [
             dbc.Col(
-                dcc.Graph(id='refl-chart'), md=6
+                dcc.Graph(id='refl-chart',
+                          config = {
+                                'displayModeBar': True,  # Show the mode bar
+                                # 'modeBarButtonsToRemove': ['toImage'],  # Remove the 'Download' button from the toolbar
+                                'scrollZoom': True,  # Enable zooming with scroll
+                                'displaylogo': False,  # Hide the Plotly logo
+                                'toImageButtonOptions': {
+                                    'format': 'svg', 
+                                    'filename': 'ARPE_Reflection',
+                                    'height': 500,
+                                    'width': 700,
+                                    'scale': 1
+                                }
+                          }
+                          ), md=6
             ),
             dbc.Col(
-                dcc.Graph(id='S21-chart'), md=6
+                dcc.Graph(id='S21-chart',
+                          config = {
+                                'displayModeBar': True,  # Show the mode bar
+                                # 'modeBarButtonsToRemove': ['toImage'],  # Remove the 'Download' button from the toolbar
+                                'scrollZoom': True,  # Enable zooming with scroll
+                                'displaylogo': False,  # Hide the Plotly logo
+                                'toImageButtonOptions': {
+                                    'format': 'svg', 
+                                    'filename': 'ARPE_SParameter',
+                                    'height': 500,
+                                    'width': 700,
+                                    'scale': 1
+                                }
+                          }
+                          ), md=6
             ),
         ]
     )
@@ -118,7 +172,7 @@ def serve_layout():
                                 'symmetrical (Lorentzian) and asymmetrical (Fano) transmission responses are supported. '
                                 'The algorithm performs an adaptive outlier removal to discard measurement points '
                                 'affected by noise or distortion. It removes the effects caused by imperfections in '
-                                'he device (such as modes with close resonance frequencies or stray coupling between '
+                                'the device (such as modes with close resonance frequencies or stray coupling between '
                                 'the resonator ports) or the experimental setup (such as lack of isolation or '
                                 'dispersion in the test-set and cables). We present an extensive assessment of the '
                                 'algorithm performance based on a numerical perturbation analysis and on the evaluation '
@@ -144,7 +198,7 @@ def serve_layout():
                 'Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses',
                 style=TEXT_STYLE),
             html.H4("by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan"),
-            html.H5(["Publication accepted in IEEE Transactions on Microwave Theory and Techniques.  DOI:",html.A('10.1109/TMTT.2021.3081730', href='https://doi.org/10.1109/TMTT.2021.3081730')]),
+            html.H5(["Published in: IEEE Transactions on Microwave Theory and Techniques (Volume: 69, Issue: 8, August 2021)  DOI:",html.A('10.1109/TMTT.2021.3081730', href='https://doi.org/10.1109/TMTT.2021.3081730')]),
             html.H5(["Manuscript available at ",html.A('UPCCommons', href='https://upcommons.upc.edu/urlFiles?idDrac=31808583')]),
             html.Div(session_id, id='session-id', style={'display': 'none'}),
             html.Hr(),
@@ -159,24 +213,32 @@ def serve_layout():
         style=CONTENT_STYLE
     )
 
-    controls = dbc.FormGroup(
+    controls = dbc.Form(
         [
             html.Br(),
-            html.H3("Upload", style={'textAlign': 'center'}),
+            html.H3("Upload", style={'textAlign': 'center','color':'#ffffff'}),
             # html.Div('Upload your data in .s2p Touchstone format.'),
             dcc.Upload(
                 id="upload-data",
                 children=html.Div(
-                    ["Drag and drop or click to upload .s2p files."]
+                    [
+                        "Drag and Drop or Select .s2p Files", 
+                        html.Img(
+                            src='assets/upload.png', style={'height':'20px', 'marginLeft':'10px'}
+                        )
+                        ]
                 ),
                 style={
-                    "width": "98%",
+                    "width": "100%",
                     "height": "60px",
                     "lineHeight": "60px",
                     "borderWidth": "1px",
                     "borderStyle": "dashed",
                     "borderRadius": "5px",
                     "textAlign": "center",
+                    'color':'#ffffff'
+                    # 'background': 'linear-gradient(45deg, #ffcccb 5%, transparent 5%, transparent 95%, #ffcccb 95%, #ffcccb 100%, transparent 100%, transparent)'
+                    # 'padding' : '20px'
                 },
                 multiple=True,
             ),
@@ -190,13 +252,13 @@ def serve_layout():
                         n_clicks=0,
                         children='Calculate',
                         color='primary',
-                        block=True
+                        class_name = "w-100"
                     ),
                     dbc.Spinner(html.Div(id='loading'), color='primary'),
                 ]),
             html.Br(),
-            html.H3('Choose File to Plot', style={
-                'textAlign': 'center'
+            html.H3('File to Plot', style={
+                'textAlign': 'center', 'color':'#ffffff'
             }),
             dcc.Dropdown(
                 id='name-dropdown',
@@ -205,36 +267,55 @@ def serve_layout():
             ),
             html.Br(),
             html.H3('Source Code', style={
-                'textAlign': 'center'
+                'textAlign': 'center','color':'#ffffff'
             }),
-            html.Label(['The source code is available in the Git repository: ', html.A('ARPE-edu', href='https://github.com/ARPE-edu/arpe')]),
+            html.Label(['The source code is available in the Git repository: ', html.A('ARPE-edu', href='https://github.com/ARPE-edu/arpe')],style={'color':'#ffffff'}),
             html.Br(),
             html.Img(
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Logo_UPC.svg/110px-Logo_UPC.svg.png",
+                src="/assets/CommSense.png",
                 style={
-                    'height': '25%',
-                    'width': '25%',
+                    'height': '20%',
+                    'width': '20%',
                     'float': 'center',
-                    'position': 'relative'
+                    'position': 'relative',
+                    'margin-right': '20px',
+                    'margin-left': '60px',
+                    'margin-top': '230px'
                 },
             ),
 
             html.Img(
-                src="https://www.cells.es/logo.png",
+                src="/assets/ALBA.svg",
                 style={
-                    'height': '50%',
-                    'width': '50%',
+                    'height': '30%',
+                    'width': '30%',
                     'float': 'center',
-                    'position': 'relative'
+                    'position': 'relative',
+                    # 'backgroundColor': '#293e6b',
+                    'margin-left': '40px',
+                    'margin-top': '230px'
                 },
             ),
+
+            html.Img(
+                src="/assets/UPC.png",
+                style={
+                    'height': '80%',
+                    'width': '80%',
+                    'float': 'center',
+                    'position': 'relative',
+                    'margin-left': '30px',
+                    'margin-top': '20px'
+                },
+            ),
+
         ]
     )
 
     sidebar = html.Div(
         [
-            html.H1('ARPE', style=TEXT_STYLE),
-            html.Hr(),
+            html.H1('ARPE', style=TEXT_STYLE2),
+            html.Hr(style={'backgroundColor': '#ffffff', 'height': '2px', 'border': 'none'}),
             controls
         ],
         style=SIDEBAR_STYLE,
@@ -254,6 +335,7 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP], server=server)
 app.title = 'ARPE'
 app.config['suppress_callback_exceptions'] = True
 app.layout = serve_layout
+app._favicon = ("favicon.png")
 
 
 @server.route("/download/<path:path>")
@@ -319,7 +401,7 @@ def parse_uploads(uploaded_filenames, uploaded_file_contents, session_id):
                 fp.write(base64.decodebytes(data))
 
     files = uploaded_files(session_id)
-    amountoffiles = 'Upload of {} file successful'.format(len(files))
+    amountoffiles = html.Div('Upload of {} file successful'.format(len(files)),style={'color': 'white'})
     if len(files) == 0:
         return ''
     else:
@@ -341,7 +423,26 @@ def update_output(click,session_id, tdict):
             if os.path.exists(os.path.join(conf.dashapp["uploaddir"], session_id)):
                 (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave, Corrupt) = q_mh.TheQFuntion(
                     os.path.join(conf.dashapp["uploaddir"], session_id))
-                codedone = 'The calculations are finished'
+                codedone = html.Div('The calculations are finished',style={'color': 'white'})
+
+
+                rounding_specs = {
+                'Resonant Frequency [Hz]': 0,  # Replace 'column2' with your actual column name and desired decimals
+                'Loaded Quality Factor': 2,
+                'Coupling Factor S11': 5,
+                'Coupling Factor S22': 5,
+                'Unloaded Quality Factor': 2,
+                'Percentage of Data Removed': 2,  # Add more columns as needed
+                }
+                
+                DataToExport = DataToSave
+
+                # Apply rounding to each specified column
+                for column, decimals in rounding_specs.items():
+                    if column in DataToSave.columns:  # Ensure the column exists
+                        DataToSave[column] = DataToSave[column].round(decimals)
+
+                # DataToSave = DataToSave.round(2)
 
                 ### We count the amount of executions per visit without tracking information ###
                 executionstats = open(str(UPLOAD_DIRECTORY) + "/" + str(session_id) + ".txt", "a")
@@ -354,9 +455,22 @@ def update_output(click,session_id, tdict):
                 return tdict, codedone, html.Div(
                     [
                         dash_table.DataTable(
-                            data=DataToSave.to_dict("rows"),
+                            data=DataToSave.to_dict("records"),
                             columns=[{"id": x, "name": x} for x in DataToSave.columns],
                             export_format="xlsx",
+                            style_header={
+                            # 'backgroundColor': '#293e6b',
+                            'fontWeight': 'bold',
+                            # 'color': 'white'
+                            },
+                            style_cell_conditional=[
+                                {
+                                    'if': {'column_id': 'Filenames'},  # Use 'column_id' instead of 'id'
+                                    'textAlign': 'left'
+                                }
+                            ],
+                            style_cell={'textAlign': 'right'},  # Default alignment for other cells
+                            # style_as_list_view=True,
                         )
                     ]
                 ), Corrupt, [{'label': i, 'value': i} for i in ListofFiles]
@@ -384,18 +498,29 @@ def update_theq_chart(session_id, TDict, selector):
                 'y': IS21,
                 'name': 'S21 input data',
                 'mode': 'markers',
-                'marker': {'size': 7, "color": 'green'},
-                'color': 'firebrick'
+                'marker': {'size': 10, 
+                    "color": '1f77b4',
+                    'symbol': 'circle',
+                    'line': {'color':'black', 'width':1},
+                    'opacity':0.5
+                    },
             },
             {
                 'x': WRS21,
                 'y': WIS21,
                 'name': 'S21 fit',
                 'mode': 'line',
-                'marker': {'size': 7, "color": 'red'},
+                'line': {'width': 3 ,"color": '#d62728'},
             },
         ],
-        'layout': {'title': 'Transmission Circle Fit',
+        'layout': {#'title': 'Transmission Circle Fit',
+                    'title': {
+                    'text': 'Transmission Circle Fit',
+                    'x': 0.45,  # Adjust this to center over the plot
+                    'y':0.85,
+                    'xanchor': 'center',  # Keeps the title centered relative to the x value
+                    'font': {'size': 18}
+                    },
                    'clickmode': 'event+select',
                    'xaxis': dict(
                        title='Re(S21)'
@@ -437,15 +562,20 @@ def update_theq_reflchart(session_id, TDictRef, selector):
                 'y': IS11,
                 'name': 'S11 input data',
                 'mode': 'markers',
-                'marker': {'size': 7, "color": 'green'},
-                'color': 'firebrick'
+                # 'marker': {'size': 7, "color": '#2ca02c'},
+                'marker': {'size': 10, 
+                    "color": '#2ca02c',
+                    'symbol': 'circle',
+                    'line': {'color':'black', 'width':1},
+                    'opacity':0.5
+                    },
             },
             {
                 'x': WRS11,
                 'y': WIS11,
                 'name': 'S11 fit',
                 'mode': 'line',
-                'marker': {'size': 7, "color": 'red'},
+                'line': {'width': 3, "color": '#d62728'},
             },
             {
                 'x': WRS11c,
@@ -459,15 +589,20 @@ def update_theq_reflchart(session_id, TDictRef, selector):
                 'y': IS22,
                 'name': 'S22 input data',
                 'mode': 'markers',
-                'marker': {'size': 7, "color": 'green'},
-                'color': 'firebrick'
+                # 'marker': {'size': 7, "color": '#bcbd22'},
+                'marker': {'size': 10, 
+                    "color": '#ff7f0e',
+                    'symbol': 'circle',
+                    'line': {'color':'black', 'width':1},
+                    'opacity':0.5
+                },
             },
             {
                 'x': WRS22,
                 'y': WIS22,
                 'name': 'S22 fit',
                 'mode': 'line',
-                'marker': {'size': 7, "color": 'red'},
+                'line': {'width': 3, "color": '#d62728'},
             },
             {
                 'x': WRS22c,
@@ -477,7 +612,14 @@ def update_theq_reflchart(session_id, TDictRef, selector):
                 'marker': {'size': 7, "color": 'blue'},
             },
         ],
-        'layout': {'title': 'Reflection Circle Fit',
+        'layout': { #'title': 'Reflection Circle Fit',
+                    'title': {
+                    'text': 'Reflection Circle Fit',
+                    'x': 0.45,  # Adjust this to center over the plot
+                    'y':0.85,
+                    'xanchor': 'center',  # Keeps the title centered relative to the x value
+                    'font': {'size': 18}
+                    },
                    'clickmode': 'event+select',
                    'xaxis': dict(
                        title='Re(S)'
@@ -511,9 +653,8 @@ def update_theq_chart(session_id, TDicttran, selector):
                 'y': RS11tr,
                 'name': 'S11 input data',
                 'mode': 'line',
-                'marker': {'size': 7, "color": 'blue'},
+                'line': {'width': 3 ,"color": '#2ca02c'},
                 'yaxis': 'y2',
-                'color': 'firebrick'
             },
             {
                 'x': ftr,
@@ -521,21 +662,32 @@ def update_theq_chart(session_id, TDicttran, selector):
                 'name': 'S22 input data',
                 'mode': 'line',
                 'yaxis': 'y2',
-                'marker': {'size': 7, "color": 'green'},
+                # 'line': {'width': 3 ,"color": '#bcbd22'},
+                'line': {'width': 3 ,"color": '#ff7f0e'},
             },
             {
                 'x': ftr,
                 'y': WRS21tr,
                 'name': 'S21 input data',
                 'mode': 'line',
-                'marker': {'size': 7, "color": 'red'},
+                'line': {'width': 3 ,"color": '#1f77b4'},
             },
         ],
         'layout': {
-            'title': 'S-Parameter',
+            # 'title': 'S-Parameter',
+            'title': {
+                    'text': 'S-Parameter',
+                    'x': 0.45,  # Adjust this to center over the plot
+                    'y':0.85,
+                    'xanchor': 'center',  # Keeps the title centered relative to the x value
+                    'font': {'size': 18}
+                    },
             'clickmode': 'event+select',
             'xaxis': dict(
-                title='Frequency [Hz]'
+                title='Frequency [Hz]',
+                exponentformat='e',  # Forces the exponent format to be displayed
+                showexponent='all',  # Always show exponent
+                minexponent=3  # Use scientific notation for values >= 1e3
             ),
             'yaxis': dict(
                 title=' Transmission [dB]'
@@ -564,4 +716,4 @@ if __name__ == '__main__':
     ####### global environment
     app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
-    #app.run_server(port=8050, debug=True)
+    # app.run_server(port=8050, debug=False)
