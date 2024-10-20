@@ -259,7 +259,7 @@ def serve_layout():
                         n_clicks=0,
                         children='Calculate',
                         color='primary',
-                        class_name = "w-100"
+                        #class_name = "w-100"
                     ),
                     dbc.Spinner(html.Div(id='loading'), color='primary'),
                 ]),
@@ -772,6 +772,6 @@ def display_confirm(value):
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-    app.run_server(port=8050,debug=True,host='0.0.0.0')
+    app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
     # app.run_server(port=8050, debug=False)
