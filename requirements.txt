@@ -11,3 +11,4 @@ control
 numpy
 matplotlib
 colorama
+concurrent
