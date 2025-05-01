@@ -204,26 +204,44 @@ def BetaFunction(ring_slot,df,phases11_unw,phases22_unw,phase21_unw,tau,MagS21,f
     L_in_av = 1/np.abs(np.sqrt(coef111.real**2 + coef111.imag**2))
     L_out_av = 1/np.abs(np.sqrt(coef222.real**2 + coef222.imag**2))
 
-    SC11 = np.abs((np.abs(co_11) - R11) / (np.abs(co_11) + R11))
-    SC22 = np.abs((np.abs(co_22) - R22) / (np.abs(co_22) + R22))
+    #SC11 = np.abs((np.abs(co_11) - R11) / (np.abs(co_11) + R11))
+    #SC22 = np.abs((np.abs(co_22) - R22) / (np.abs(co_22) + R22))
 
+    co_11t = (co_11)/(np.abs(co_11 + R11*(co_11/np.abs(co_11))))
+    R11t = (R11)/(np.abs(co_11 + R11*(co_11/np.abs(co_11))))
+
+    co_22t = (co_22)/(np.abs(co_22 + R22*(co_22/np.abs(co_22))))
+    R22t = (R22)/(np.abs(co_22 + R22*(co_22/np.abs(co_22))))
+    
+    # Cirlces are now tangent to unit cirlce
+    SC11 = (np.abs(co_11t) - R11t)
+    SC22 = (np.abs(co_22t) - R22t) 
+     
+    
     Cbeta1 = (1 - SC11) / (SC11 + SC22)
     Cbeta2 = (1 - SC22) / (SC11 + SC22)
 
+    print(Cbeta1)
+    print(Cbeta2)
+
+    beta1 = Cbeta1
+    beta2 = Cbeta2
+
     # If in some rare cases, it appears a negative beta -> beta = 0.0
-
-    if 0.9 * abs(s11_av) > abs(co_11) :
-   # if Lbeta1SC > 0.01:
-        beta1 = Cbeta1
-    else:
-        beta1 = Wbeta1SC
-
-    #if s22pabs < abs(co_22):
-    if 0.9 * abs(s22_av) > abs(co_22):
-   # if Lbeta2SC > 0.01:
-        beta2 = Cbeta2
-    else:
-        beta2 = Wbeta2SC
+#################################################################
+#     if 0.9 * abs(s11_av) > abs(co_11) :
+#    # if Lbeta1SC > 0.01:
+#         beta1 = Cbeta1
+#     else:
+#         beta1 = Wbeta1SC
+###### what is this again?
+#     #if s22pabs < abs(co_22):
+#     if 0.9 * abs(s22_av) > abs(co_22):
+#    # if Lbeta2SC > 0.01:
+#         beta2 = Cbeta2
+#     else:
+#         beta2 = Wbeta2SC
+#################################################################
 
     if 20*np.log10(s21mag) < -50:
         beta1 = Wbeta1SC
