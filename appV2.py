@@ -1,19 +1,34 @@
 """
-Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
-by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
+Algorithm for Resonator Parameter Extraction from
+Symmetrical and Asymmetrical Transmission Responses
 
-Code written by Patrick Krkotic and Queralt Gallardo
-Support contact: arpe-edu@outlook.de
+Authors:
+    Patrick Krkotic
+    Queralt Gallardo
+    Nikki Tagdulang
+    Montse Pont
+    Joan M. O'Callaghan
 
-Version 2.0.0
 Contributors:
-Agustin Gomez Mansilla
-Martin Herold
-Tamas Madarasz
+    Agustin Gomez Mansilla
+    Martin Herold
+    Tamas Madarasz
 
-Developed on Python 3.7.7
-Updated Python 3.11.9
+Contact:
+    arpe-edu@outlook.de
+
+Original Publication:
+    2021
+
+Version History:
+    v1.0.0  – Initial release (Python 3.7.7) - 2021
+    v2.0.0  – New interface and updated to Python 3.11.9 - 2023
+    v2.1.0  – Novel routine for over and undercoupling, refactoring and clean-up, and update to Python 3.12.10 - 2026
+
+Citation:
+    Please cite the original 2021 publication when using this code.    
 """
+
 
 import dash
 from dash import dcc
@@ -477,7 +492,7 @@ def update_output(click,session_id, tdict):
     if isinstance(click, int):
         if click > 0:
             if os.path.exists(os.path.join(conf.dashapp["uploaddir"], session_id)):
-                (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave, Corrupt) = q_mh.TheQFuntion(
+                (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave, Corrupt) = q_mh.TheQFunction(
                     os.path.join(conf.dashapp["uploaddir"], session_id))
                 codedone = html.Div('The calculations are finished',style={'color': 'white'})
 
@@ -772,6 +787,6 @@ def display_confirm(value):
 """ Run it """
 if __name__ == '__main__':
     ####### global environment
-    app.run_server(port=8050,debug=False,host='0.0.0.0')
+    # app.run_server(port=8050,debug=False,host='0.0.0.0')
     ####### local environment
-    # app.run_server(port=8050, debug=False)
+    app.run(port=8050, debug=False)

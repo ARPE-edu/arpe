@@ -1,97 +1,121 @@
 """
-Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
-by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
+Algorithm for Resonator Parameter Extraction from
+Symmetrical and Asymmetrical Transmission Responses
 
-Code written by Queralt Gallardo and Patrick Krkotic
-arpe-edu@outlook.de
+Authors:
+    Patrick Krkotic
+    Queralt Gallardo
+    Nikki Tagdulang
+    Montse Pont
+    Joan M. O'Callaghan
 
-Version 1.0.0
 Contributors:
+    Agustin Gomez Mansilla
+    Martin Herold
+    Tamas Madarasz
 
-Developed on Python 3.7.7
+Contact:
+    arpe-edu@outlook.de
+
+Original Publication:
+    2021
+
+Version History:
+    v1.0.0  – Initial release (Python 3.7.7) - 2021
+    v2.0.0  – New interface and updated to Python 3.11.9 - 2023
+    v2.1.0  – Novel routine for over and undercoupling, refactoring and clean-up, and update to Python 3.12.10 - 2026
+
+Citation:
+    Please cite the original 2021 publication when using this code.
 """
+
 
 import numpy as np
 import math
 
-
-
 def PhaseUnwrappingCorrection(ring_slot,df):
+    """
+    Phase unwrapping and delay de-embedding for S-parameters.
 
-    S11phase = []
-    S21phase = []
-    S12phase = []
-    S22phase = []
+    Returns:
+        s11_corr, s21_corr, s12_corr, s22_corr, tau
+        where each sXY_corr is a complex ndarray with delay removed,
+        and tau is the estimated average delay (seconds).
+    """
+        
+    s11_phase = []
+    s21_phase = []
+    s12_phase = []
+    s22_phase = []
 
-#################################################
-#### Define the Right Touchstone Columns
-##################################################
+    #################################################
+    #### Touchstone Columns Reminder
+    ##################################################
 
     """
     s11 = ring_slot.s[:,0,0] # S11 values from the S-Parameter Matrix in .s2p file
     s21 = ring_slot.s[:,1,0] # S21 values from the S-Parameter Matrix in .s2p file
-    s12 = ring_slot.s[:,0,1]
+    s12 = ring_slot.s[:,0,1] # S12 values from the S-Parameter Matrix in .s2p file
     s22 = ring_slot.s[:,1,1] # S22 values from the S-Parameter Matrix in .s2p file
     """
 
-#################################################
-#### Phase Unwrapping
-##################################################
+    #################################################
+    #### Phase Unwrapping
+    ##################################################
 
-    f = df['s_db 21'].index
+    frequencies = df['s_db 21'].index
 
+    # Permutations 0 0, 0 1, 1 0 , 1 1 --> S11, S12, S21, S22
     for p in range(2):
-        for k in range(2):
-            ######## leads to 0 0, 0 1, 1 0 , 1 1 --> S11, S12, S21, S22
-
-            sparamter = ring_slot.s[:,p,k] # S21 values from the S-Parameter Matrix in .s2p file
-            phase = ring_slot.s_deg[:,p,k] # Phase data of S21
-            phase_unw = np.zeros(len(phase))
+        for k in range(2):            
+            s_parameter = ring_slot.s[:,p,k] 
+            phase = ring_slot.s_deg[:,p,k] 
+            phase_unwrapped = np.zeros(len(phase))
             j = 0
 
             # Unwrap routine
-            for i in range(len(phase_unw)):
-                phase_unw[i] = math.radians(phase_unw[i]) # Degrees to radians
+            for i in range(len(phase_unwrapped)):
+                # Degree to radians
+                phase_unwrapped[i] = math.radians(phase_unwrapped[i]) 
             for i in range(len(phase)):
-                phase[i] = math.radians(phase[i]) # Degrees to radians
+                # Degrees to radians
+                phase[i] = math.radians(phase[i]) 
 
-            disc= False
+            disc = False
             for i in range(len(phase)-1):
                 if phase[i+1] - phase[i] >= ((3*np.pi)/2) or phase[i+1] - phase[i] <= -((3*np.pi)/2): # search for phase discontinuity
                     disc= True
                     if phase[i] < phase[i+1]: # if it is a positive discontinuity
                         j = i
                         for j in range(i, len(phase)-1):
-                            phase_unw[j+1] = phase[j+1] - (2*np.pi)
+                            phase_unwrapped[j+1] = phase[j+1] - (2*np.pi)
                     else:
                         for j in range(i, len(phase)-1):
-                            phase_unw[j+1] = phase[j+1]
+                            phase_unwrapped[j+1] = phase[j+1]
                 elif disc==False:
                     if i ==0:
-                        phase_unw[i] = phase[i]
-                        phase_unw[i + 1] = phase[i + 1]
+                        phase_unwrapped[i] = phase[i]
+                        phase_unwrapped[i + 1] = phase[i + 1]
                     else:
-                        phase_unw[i+1] = phase[i+1]
+                        phase_unwrapped[i+1] = phase[i+1]
 
             n = round(0.1 * len(df))
 
-#################################################
-#### Phase Correction
-##################################################
+            #################################################
+            #### Phase Correction
+            ##################################################
 
-            ph_ini = phase_unw[:n] # initial 10%
-            ph_fin = phase_unw[-n:] # final 10%
+            ph_ini = phase_unwrapped[:n] # initial 10%
+            ph_fin = phase_unwrapped[-n:] # final 10%
             for i in range(len(ph_ini)): # Degrees to radians
                 ph_ini[i] = math.radians(ph_ini[i])
                 ph_fin[i] = math.radians(ph_fin[i])
 
             # Linear regression initial part
-            coef_lin_ini = np.polyfit(f[:n], ph_ini[:n], 1)
-            #pol_lin_ini = np.poly1d(coef_lin_ini)
-
+            coef_lin_ini = np.polyfit(frequencies[:n], ph_ini[:n], 1)
             # Linear regression final part
-            coef_lin_fin = np.polyfit(f[-n:], ph_ini[-n:], 1)
-            #pol_lin_fin = np.poly1d(coef_lin_fin)
+            coef_lin_fin = np.polyfit(frequencies[-n:], ph_ini[-n:], 1)
+
 
             # Plot the phase and its linear fitting INITIAL PART
             """
@@ -121,18 +145,18 @@ def PhaseUnwrappingCorrection(ring_slot,df):
             tau_fin = - coef_lin_fin[0] / (4 * math.pi)
             tau_med = (tau_ini + tau_fin) / 2
 
-            for i in range(len(f)):
-                sparamter_r = sparamter * np.exp(2j * math.pi * (tau_med) * f[i])
+            for i in range(len(frequencies)):
+                s_parameter_r = s_parameter * np.exp(2j * math.pi * (tau_med) * frequencies[i])
 
             if p == 0:
                 if k == 0:
-                    S11phase.append(sparamter_r)
+                    s11_phase.append(s_parameter_r)
                 else:
-                    S12phase.append(sparamter_r)
+                    s12_phase.append(s_parameter_r)
             else:
                 if k == 0:
-                    S21phase.append(sparamter_r)
+                    s21_phase.append(s_parameter_r)
                 else:
-                    S22phase.append(sparamter_r)
+                    s22_phase.append(s_parameter_r)
 
-    return S11phase,S21phase,S12phase,S22phase,tau_med
+    return s11_phase,s21_phase,s12_phase,s22_phase,tau_med

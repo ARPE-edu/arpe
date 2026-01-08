@@ -1,14 +1,32 @@
 """
-Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
-by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
+Algorithm for Resonator Parameter Extraction from
+Symmetrical and Asymmetrical Transmission Responses
 
-Code written by Patrick Krkotic and Queralt Gallardo
-arpe-edu@outlook.de
+Authors:
+    Patrick Krkotic
+    Queralt Gallardo
+    Nikki Tagdulang
+    Montse Pont
+    Joan M. O'Callaghan
 
-Version 1.0.0
 Contributors:
+    Agustin Gomez Mansilla
+    Martin Herold
+    Tamas Madarasz
 
-Developed on Python 3.7.7
+Contact:
+    arpe-edu@outlook.de
+
+Original Publication:
+    2021
+
+Version History:
+    v1.0.0  – Initial release (Python 3.7.7) - 2021
+    v2.0.0  – New interface and updated to Python 3.11.9 - 2023
+    v2.1.0  – Novel routine for over and undercoupling, refactoring and clean-up, and update to Python 3.12.10 - 2026
+
+Citation:
+    Please cite the original 2021 publication when using this code.
 """
 
 import os
@@ -18,151 +36,78 @@ from algorithm.PeakValueFunction import PeakValue
 from algorithm.WCCFX import ComplexFit
 from algorithm.final_betas import BetaFunction
 import algorithm.Dict as Dict
-import time
 import pandas as pd
 
 
-##############################################################
-#### Reading Files of a Folder
-##############################################################
-
 def Q(filepath):
-    basepath, filename = os.path.split(filepath)
-    ListofFileNames = []
-    ListofFiles = []
-    ResonantFrequencyGHz = []
-    PlotDataListReflection = []
-    PlotDataListWCCFX = []
-    couplingfactors = []
+    """
+    Process a single Touchstone file and compute resonance/quality factors.
 
-    NetworkList = []
-    DataFrameList = []
-    WCCFXList = []
-    PlotDataList = []
-    PercentageList = []
+    filenames, wccfx_results, plot_data, unloaded_quality_factors, export_df, files_corrupted
+    """
+    _ , filename = os.path.split(filepath)
+    filenames = []
+    files = []
+    resonance_initial = []
+    wccfx_results = []
+    plot_data = []
+    unloaded_quality_factors = []
+    resonances = []
+    loaded_quality_factors = []
+    coupling_factor_s11 = []
+    coupling_factor_s22 = []
+    percent_removed = []
+    files_corrupted = []
 
-
-    Q0 = []
-    freq = []
-    quali = []
-    beta1 = []
-    beta2 = []
-    quali0 = []
-    prozent = []
-
-    Corrupt = []
-
-    ListofFiles.append(filepath)
-    ListofFileNames.append(filename)
+    files.append(filepath)
+    filenames.append(filename)
     
 
-    for touchstone in ListofFiles:
+    for touchstone in files:
         try:
+            # Load Touchstone file
             ring_slot = rf.Network(touchstone)
-            #NetworkList.append(ring_slot)
-        ###############################################################
-        #### Prepare the Network Files into a Panda Dataframe
-        ###############################################################
 
-        #for networkentry in NetworkList:
+            # Convert to DataFrame
             df = ring_slot.to_dataframe()
-            #DataFrameList.append(df)
 
-           # print("All Data Loaded")
-           # print("Number of elements " + str(len(ListofFiles)))
+            # Initial resonance estimation (scalar)
+            resonance_initial = PeakValue(df)
+        
+            # Phase unwrapping correction
+            [S11_corr, S21_corr, _, S22_corr, tau] = PhaseUnwrappingCorrection(ring_slot, df)
 
+            # Weighted complex circle fit extraction
+            [resonance_frequency, loaded_qfactor, real_S21_origin, imag_S21_origin, real_S21_wccfx, imag_S21_wccfx, percantage] = ComplexFit(ring_slot,resonance_initial,df,S21_corr[0])
 
-        ###############################################################
-        #### Determination of Resonant Frequency
-        ###############################################################
-           # print("Starting Determination of Resonant Frequency")
+            # Beta function (coupling factors)
+            [beta1, beta2, real_S11, imag_S11, S11_circle_real, S11_circle_imag, S11_circ_center_real, S11_circ_center_imag, real_S22, imag_S22, S22_circle_real, S22_circle_imag, S22_circ_center_real, S22_circ_center_imag, freq_band, S11_dB_raw, S22_dB_raw, S21_db_raw] = BetaFunction(ring_slot, df, S11_corr[0], S22_corr[0], S21_corr[0], tau, 1, resonance_frequency, loaded_qfactor)
 
-        #for df in DataFrameList:
-            ResonantFrequencyGHz = PeakValue(df)
-            # time.sleep(0.2)
-
-
-        ###############################################################
-        #### Determination of Delta and Complex Circle Fit
-        ###############################################################
-
-           # print("Starting Weighted Complex Circle Fit")
-
-
-       # for number in range(len(NetworkList)):
-            [S11, S21, S12, S22, tau] = PhaseUnwrappingCorrection(ring_slot, df)
-            [fres, Ql, reals21, imags21, realwcs21, imagwcs21, Percantage] = ComplexFit(ring_slot,
-                                                                                        ResonantFrequencyGHz,
-                                                                                        df,
-                                                                                        touchstone,S21[0])
-       ####################################################################################
-        #### Beta Function
-        ####################################################################################
-
-           # print("Starting Determination of Coupling Factors")
-
-        #for net in range(len(NetworkList)):
-
-            #[S11, S21, S12, S22, tau] = PhaseUnwrappingCorrection(NetworkList[net], DataFrameList[net])
-
-            [b1, b2, re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List] = BetaFunction(ring_slot, df, S11[0], S22[0], S21[0], tau, 1, fres,Ql)
-
-            couplingfactors.append((b1,b2))
-            PlotDataListReflection.append((re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List))
-
-            # time.sleep(0.2)
-            PlotDataList.append((reals21, imags21, realwcs21, imagwcs21,re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, S1111List, S2222List, S2121List))
-
-    #    for value in range(len(NetworkList)):
-            WCCFXList.append((fres, Ql))
-            PercentageList.append(Percantage)
-            PlotDataListWCCFX.append((reals21, imags21, realwcs21, imagwcs21))
-            Q0.append(Ql * (1 + b1 + b2))
-
-           # print('results')
-            freq.append(fres)
-            quali.append(Ql)
-            beta1.append(b1)
-            beta2.append(b2)
-            quali0.append(Ql * (1 + b1 + b2))
-            prozent.append(Percantage)
-           # print(ListofFiles)
-            # print(len(freq),len(quali),len(beta1),len(beta2),len(quali0),len(prozent))
+            # Aggregate data for plotting/return
+            plot_data.append((real_S21_origin, imag_S21_origin, real_S21_wccfx, imag_S21_wccfx, real_S11, imag_S11, S11_circle_real, S11_circle_imag, S11_circ_center_real, S11_circ_center_imag, real_S22, imag_S22, S22_circle_real, S22_circle_imag, S22_circ_center_real, S22_circ_center_imag, freq_band, S11_dB_raw, S22_dB_raw, S21_db_raw))
+            wccfx_results.append((resonance_frequency, loaded_qfactor))
+            resonances.append(resonance_frequency)
+            loaded_quality_factors.append(loaded_qfactor)
+            coupling_factor_s11.append(beta1)
+            coupling_factor_s22.append(beta2)
+            unloaded_quality_factors.append(loaded_qfactor * (1 + beta1 + beta2))
+            percent_removed.append(percantage)
+        
         except:
             print("ERROR!")
-            Corrupt.append(touchstone)
+            files_corrupted.append(touchstone)
             continue
 
+    # Remove corrupt files from the list of processed files
+    for corruptfile in files_corrupted:
+        files.remove(corruptfile)
 
-   # print('Corrpution')
-   # print(Corrupt)
-   # print(len(ListofFiles))
+    # Prepare DataFrame for saving
+    data = {"Filenames": filenames, "Resonant Frequency": resonances, "Loaded Quality Factor": loaded_quality_factors,
+            "Coupling Factor S11": coupling_factor_s11, "Coupling Factor S22": coupling_factor_s22,
+            "Unloaded Quality Factor": unloaded_quality_factors,
+            "Percentage of Data Removed": percent_removed}
+    export_df = pd.DataFrame(data)
 
-    for corruptfile in Corrupt:
-        ListofFiles.remove(corruptfile)
-
-    # for i in range(len(ListofFiles)):
-    #     freq.append(WCCFXList[i][0])
-    #     quali.append(WCCFXList[i][1])
-    #     beta1.append(couplingfactors[i][0])
-    #     beta2.append(couplingfactors[i][1])
-    #     quali0.append(Q0[i])
-    #     prozent.append(PercentageList[i])
-
-   # print('results')
-    # print(ListofFiles)
-    # print(freq)
-    # print(quali)
-    # print(beta1)
-    # print(beta2)
-    # print(prozent)
-
-    Data = {"Filenames": ListofFileNames, "Resonant Frequency": freq, "Loaded Quality Factor": quali,
-            "Coupling Factor S11": beta1, "Coupling Factor S22": beta2,
-            "Unloaded Quality Factor": quali0,
-            "Percentage of Data Removed": prozent}
-    DataToSave = pd.DataFrame(Data)
-
-    # print('Calculations Finished')
-    return ListofFileNames, WCCFXList, PlotDataList, Q0, DataToSave , Corrupt
+    return filenames, wccfx_results, plot_data, unloaded_quality_factors, export_df, files_corrupted
 
