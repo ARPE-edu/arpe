@@ -1,231 +1,231 @@
 """
-Algorithm for Resonator Parameter Extraction from Symmetrical and Asymmetrical Transmission Responses
-by Patrick Krkotic, Queralt Gallardo, Nikki Tagdulang, Montse Pont and Joan M. O'Callaghan, 2021
+Algorithm for Resonator Parameter Extraction from
+Symmetrical and Asymmetrical Transmission Responses
 
-Code written by Queralt Gallardo and Patrick Krkotic
-arpe-edu@outlook.de
+Authors:
+    Patrick Krkotic
+    Queralt Gallardo
+    Nikki Tagdulang
+    Montse Pont
+    Joan M. O'Callaghan
 
-Version 1.0.0
 Contributors:
+    Agustin Gomez Mansilla
+    Martin Herold
+    Tamas Madarasz
 
-Developed on Python 3.7.7
+Contact:
+    arpe-edu@outlook.de
+
+Original Publication:
+    2021
+
+Version History:
+    v1.0.0  – Initial release (Python 3.7.7) - 2021
+    v2.0.0  – New interface and updated to Python 3.11.9 - 2023
+    v2.1.0  – Novel routine for over and undercoupling, refactoring and clean-up, and update to Python 3.12.10 - 2026
+
+Citation:
+    Please cite the original 2021 publication when using this code.
 """
 
-from numpy import *
 import numpy as np
-from algorithm.dBCutter import BandWidthCutterTwo
 
 
 
 ################################### BETAS - REFLECTION CIRCLE FIT ############################################
 
-def BetaFunction(ring_slot,df,phases11_unw,phases22_unw,phase21_unw,tau,MagS21,fo_new,ql_wccfx_fo):
+def BetaFunction(ring_slot,df,S11_corr,S22_corr,S21_corr,tau, MagS21,resonance_frequency, loaded_qfactor):
     
-    s1111 = ring_slot.s_db[:, 0, 0]
-    s2222 = ring_slot.s_db[:, 1, 1]
-    s2121 = ring_slot.s_db[:, 1, 0]
+    # keep compatibility for currently-unused inputs but maybe required at later stage
+    _ = (tau, MagS21)
 
+    # raw dB traces from network (returned at end)
+    S11_dB_raw = ring_slot.s_db[:, 0, 0]
+    S22_dB_raw = ring_slot.s_db[:, 1, 1]
+    S21_db_raw = ring_slot.s_db[:, 1, 0]
 
-    s11 = 20*log10(np.sqrt(phases11_unw.real ** 2 + phases11_unw.imag**2))
-    s22 = 20*log10(np.sqrt(phases22_unw.real ** 2 + phases22_unw.imag**2))
-    s21 = 20*log10(np.sqrt(phase21_unw.real ** 2 + phase21_unw.imag**2))
+    # magnitudes (dB) from corrected complex traces
+    S11_dB = 20*np.log10(np.sqrt(S11_corr.real ** 2 + S11_corr.imag**2))
+    S22_dB = 20*np.log10(np.sqrt(S22_corr.real ** 2 + S22_corr.imag**2))
+    S21_dB = 20*np.log10(np.sqrt(S21_corr.real ** 2 + S21_corr.imag**2))
 
     
-# 1. Calculate average in 10% lower frequency range and 90% upper frequency range
-    n = int(round(0.1 * len(df)))
-    s11_ini = s11[:n]  # 10% lower frequencies
-    
-    s11_fin = s11[-n:]  # 90% upper frequencies
-    
-    s11_ = np.concatenate((s11_ini, s11_fin), axis=0)
-    
-    s22_ini = s22[:n]  # 10% lower frequencies
-    s22_fin = s22[-n:]  # 90% upper frequencies
-    s22_ = np.concatenate((s22_ini, s22_fin), axis=0)
-    
-    s11_av_db = mean(s11_)
-    s22_av_db = mean(s22_)
-    
-    s11_av = 10 ** (s11_av_db / 20)
-    s22_av = 10 ** (s22_av_db / 20)
-    
-    L_in_avSC = 1 / s11_av
-    L_out_avSC = 1 / s22_av
+    # 1) Average S11/S22 in the outer 10% bands, i.e. # 10% lower frequencies + # 10% upper frequencies
+    edge_count = int(round(0.1 * len(df)))
 
-    s21max = max(s21)
+    S11_edges = np.concatenate((S11_dB[:edge_count], S11_dB[-edge_count:]), axis=0)
+    S22_edges = np.concatenate((S22_dB[:edge_count], S22_dB[-edge_count:]), axis=0)
+  
+    S11_avg_db = np.mean(S11_edges)
+    S22_avg_db = np.mean(S22_edges)
+    
+    S11_avg_mag = 10 ** (S11_avg_db / 20)
+    S22_avg_mag = 10 ** (S22_avg_db / 20)
+    
+    L_in_avSC = 1 / S11_avg_mag
+    L_out_avSC = 1 / S22_avg_mag
 
-    sss = []
-    for i in s21:
-        sss.append(i)
+    # peak index from S21 trace
+    peak_idx = int(np.argmax(S21_dB))
 
-    s11min = s11[sss.index(s21max)]
-    s22min = s22[sss.index(s21max)]
+    # minimum S11 and S22 at peak S21
+    S11_minimum_dB = S11_dB[peak_idx]
+    S22_minimum_dB = S22_dB[peak_idx]
 
-    s11mag = 10 ** (s11min / 20)
-    s22mag = 10 ** (s22min / 20)
+    S11_minimum_mag = 10 ** (S11_minimum_dB / 20)
+    S22_minimum_mag = 10 ** (S22_minimum_dB / 20)
 
-    Wbeta1SC = (1 - L_in_avSC * s11mag) / (L_in_avSC * s11mag + L_out_avSC * s22mag)
-    Wbeta2SC = (1 - L_out_avSC * s22mag) / (L_in_avSC * s11mag + L_out_avSC * s22mag)
+    beta1_scalar = (1 - L_in_avSC * S11_minimum_mag) / (L_in_avSC * S11_minimum_mag + L_out_avSC * S22_minimum_mag)
+    beta2_scalar = (1 - L_out_avSC * S22_minimum_mag) / (L_in_avSC * S11_minimum_mag + L_out_avSC * S22_minimum_mag)
 
    
-    ################################################################### LE CIRLCE
+    ############### circle fit S11 and S22 with outlier removal #######################
 
     frequencies = df['s_db 21'].index
+    delta = np.array(0.5 * ((frequencies / resonance_frequency) - (resonance_frequency / frequencies)))
 
-    deltacoupling = np.array(0.5 * ((frequencies / fo_new) - (fo_new / frequencies)))
+    ringcut = np.where(loaded_qfactor*abs(delta) < 1/2)
 
-    ringcut = np.where(ql_wccfx_fo*abs(deltacoupling) < 1/2)
+    S11_band = ring_slot.s[ringcut[0] , 0, 0]
+    S22_band = ring_slot.s[ringcut[0] , 1, 1]
+    freq_band = frequencies[ringcut[0]]
 
-    ring_slotcut11 = ring_slot.s[ringcut[0] , 0, 0]
-    ring_slotcut22 = ring_slot.s[ringcut[0] , 1, 1]
+    real_S11= S11_band.real
+    imag_S11= S11_band.imag
+    real_S22= S22_band.real
+    imag_S22= S22_band.imag
 
-    f = frequencies[ringcut[0]]
+    # s21 magnitude used for low-signal fallback
+    S21_corr_db = 20 * np.log10(np.sqrt(S21_corr.real**2 + S21_corr.imag**2))
+    s21_peak_mag = 10 ** (np.max(S21_corr_db) / 20)
 
-    s11 = ring_slotcut11
-    s22 = ring_slotcut22
 
-    s21 = phase21_unw
-
-    dBS21 = 20 * np.log10(np.sqrt(s21.real ** 2 + s21.imag ** 2))
-    s21mag = 10 ** (max(dBS21)/20)
-
-    re11= s11.real
-    im11= s11.imag
-    re22= s22.real
-    im22= s22.imag
-
-    numberofiterations = 0
-    anchor = True
-    
+    anchor = True    
     while anchor == True:
-        numberofiterations = numberofiterations+1
-        circle_fit=True
-        A11 = np.column_stack((re11, im11, np.ones(len(re11))))
-        b11 = - (np.sqrt(re11 ** 2 + im11 ** 2)) ** 2
-        A_plus11 = np.linalg.pinv(A11)
-        x_vec11 = A_plus11.dot(b11)
+        A_S11_matrix = np.column_stack((real_S11, imag_S11, np.ones(len(real_S11))))
+        b_S11_vector = - (np.sqrt(real_S11 ** 2 + imag_S11 ** 2)) ** 2
+        A_S11_matrix_pseudoinverse = np.linalg.pinv(A_S11_matrix)
+        x_vector_S11_fitparams = A_S11_matrix_pseudoinverse.dot(b_S11_vector)
 
-        xo11 = -x_vec11[0] / 2
-        yo11 = -x_vec11[1] / 2
+        S11_circ_center_real = -x_vector_S11_fitparams[0] / 2
+        S11_circ_center_imag = -x_vector_S11_fitparams[1] / 2
 
-
-        if ((1 / 4) * (x_vec11[0] ** 2 + x_vec11[1] ** 2)) - x_vec11[2] <= 0:
+        if ((1 / 4) * (x_vector_S11_fitparams[0] ** 2 + x_vector_S11_fitparams[1] ** 2)) - x_vector_S11_fitparams[2] <= 0:
             R11 = 0
         else:
-            R11 = np.sqrt(((1 / 4) * (x_vec11[0] ** 2 + x_vec11[1] ** 2)) - x_vec11[2])
+            R11 = np.sqrt(((1 / 4) * (x_vector_S11_fitparams[0] ** 2 + x_vector_S11_fitparams[1] ** 2)) - x_vector_S11_fitparams[2])
 
-        t = np.linspace(0, 2 * np.pi, 2 * len(f) + 1)
-        xc11 = R11 * np.cos(t) + xo11
-        yc11 = R11 * np.sin(t) + yo11
+        t = np.linspace(0, 2 * np.pi, 2 * len(freq_band) + 1)
+        S11_circle_real = R11 * np.cos(t) + S11_circ_center_real
+        S11_circle_imag = R11 * np.sin(t) + S11_circ_center_imag
 
-        A22 = np.column_stack((re22, im22, np.ones(len(re22))))
-        b22 = - (np.sqrt(re22 ** 2 + im22 ** 2)) ** 2
-        A_plus22 = np.linalg.pinv(A22)
-        x_vec22 = A_plus22.dot(b22)
+        A_S22_matrix = np.column_stack((real_S22, imag_S22, np.ones(len(real_S22))))
+        b_S22_vector = - (np.sqrt(real_S22 ** 2 + imag_S22 ** 2)) ** 2
+        A_S22_matrix_pseudoinverse = np.linalg.pinv(A_S22_matrix)
+        x_vector_S22_fitparams = A_S22_matrix_pseudoinverse.dot(b_S22_vector)
 
-        xo22 = -x_vec22[0] / 2
-        yo22 = -x_vec22[1] / 2
-        if ((1 / 4) * (x_vec22[0] ** 2 + x_vec22[1] ** 2)) - x_vec22[2] <= 0:
+        S22_circ_center_real = -x_vector_S22_fitparams[0] / 2
+        S22_circ_center_imag = -x_vector_S22_fitparams[1] / 2
+
+        if ((1 / 4) * (x_vector_S22_fitparams[0] ** 2 + x_vector_S22_fitparams[1] ** 2)) - x_vector_S22_fitparams[2] <= 0:
             R22 = 0
         else:
-            R22 = np.sqrt(((1 / 4) * (x_vec22[0] ** 2 + x_vec22[1] ** 2)) - x_vec22[2])
+            R22 = np.sqrt(((1 / 4) * (x_vector_S22_fitparams[0] ** 2 + x_vector_S22_fitparams[1] ** 2)) - x_vector_S22_fitparams[2])
 
-        xc22 = R22 * np.cos(t) + xo22
-        yc22 = R22 * np.sin(t) + yo22
+        S22_circle_real = R22 * np.cos(t) + S22_circ_center_real
+        S22_circle_imag = R22 * np.sin(t) + S22_circ_center_imag
 
-        coef11 = xo11 + 1j * yo11 - (R11 * ((xo11 + 1j * yo11) / np.sqrt(xo11 ** 2 + yo11 ** 2)))
+        # coef11 = S11_circ_center_real + 1j * S11_circ_center_imag - (R11 * ((S11_circ_center_real + 1j * S11_circ_center_imag) / np.sqrt(S11_circ_center_real ** 2 + S11_circ_center_imag ** 2)))
         #gamma_r_in = np.sqrt(coef11.real ** 2 + coef11.imag ** 2)
 
-        coef22 = xo22 + 1j * yo22 - (R22 * ((xo22 + 1j * yo22) / np.sqrt(xo22 ** 2 + yo22 ** 2)))
+        # coef22 = S22_circ_center_real + 1j * S22_circ_center_imag - (R22 * ((S22_circ_center_real + 1j * S22_circ_center_imag) / np.sqrt(S22_circ_center_real ** 2 + S22_circ_center_imag ** 2)))
         #gamma_r_out = np.sqrt(coef22.real ** 2 + coef22.imag ** 2)
 
-        co_11 = xo11 + yo11*1j
-        co_22 = xo22 + yo22*1j
+        S11_circle_centre = S11_circ_center_real + S11_circ_center_imag*1j
+        S22_circle_centre = S22_circ_center_real + S22_circ_center_imag*1j
 
-        Prover11 = []
-        Prover22 = []
+        Prover_S11 = []
+        Prover_S22 = []
+        S11_iterative = []
+        S22_iterative = []
+        new_index_S11 = []
+        new_index_S22 = []
 
-        s11new = []
-        s22new = []
+        for l in range(len(S11_band)):
+            new_index_S11.append(l)
 
-        NewIndexList = []
-        NewIndexList22 = []
+        for index in new_index_S11:
+            S11_iterative.append(S11_band[index])
 
-        for l in range(len(s11)):
-            NewIndexList.append(l)
+        S11_band = S11_iterative
 
-        for index in NewIndexList:
-            s11new.append(s11[index])
+        for l in range(len(S22_band)):
+            new_index_S22.append(l)
 
-        s11 = s11new
+        for index in new_index_S22:
+            S22_iterative.append(S22_band[index])
 
-        for l in range(len(s22)):
-            NewIndexList22.append(l)
+        S22_band = S22_iterative
 
-        for index in NewIndexList22:
-            s22new.append(s22[index])
+        for k in range(len(S11_band)):
+            Prover_S11.append(abs(R11 - abs(S11_band[k] - S11_circle_centre)))
 
-        s22 = s22new
+        for k in range(len(S22_band)):
+            Prover_S22.append(abs(R22 - abs(S22_band[k] - S22_circle_centre)))
 
-        for k in range(len(s11)):
-            Prover11.append(abs(R11 - abs(s11[k] - co_11)))
-
-        for k in range(len(s22)):
-            Prover22.append(abs(R22 - abs(s22[k] - co_22)))
-
-        condition11 = 0.1*abs(R11)
-        condition22 = 0.1*abs(R22)
+        condition_S11 = 0.1*abs(R11)
+        condition_S22 = 0.1*abs(R22)
 
 
-        if max(Prover11) > condition11:
+        if max(Prover_S11) > condition_S11:
 
-            del s11[Prover11.index(max(Prover11))]
-            re11 = np.real(s11)
-            im11 = np.imag(s11)
+            del S11_band[Prover_S11.index(max(Prover_S11))]
+            real_S11 = np.real(S11_band)
+            imag_S11 = np.imag(S11_band)
         else:
             pass
 
-        if max(Prover22) > condition22:
-            del s22[Prover22.index(max(Prover22))]
-            re22 = np.real(s22)
-            im22 = np.imag(s22)
+        if max(Prover_S22) > condition_S22:
+            del S22_band[Prover_S22.index(max(Prover_S22))]
+            real_S22 = np.real(S22_band)
+            imag_S22 = np.imag(S22_band)
         else:
             pass
 
-        if max(Prover11) < condition11 and max(Prover22) < condition22:
+        if max(Prover_S11) < condition_S11 and max(Prover_S22) < condition_S22:
             break
 
 
     # 5. Calculate the coupling factors
-    coef111 = xo11 + 1j * yo11 + (R11 * ((xo11 + 1j * yo11) / np.sqrt(xo11 ** 2 + yo11 ** 2)))
-    coef222 = xo22 + 1j * yo22 + (R22 * ((xo22 + 1j * yo22) / np.sqrt(xo22 ** 2 + yo22 ** 2)))
+    # coef111 = S11_circ_center_real + 1j * S11_circ_center_imag + (R11 * ((S11_circ_center_real + 1j * S11_circ_center_imag) / np.sqrt(S11_circ_center_real ** 2 + S11_circ_center_imag ** 2)))
+    # coef222 = S22_circ_center_real + 1j * S22_circ_center_imag + (R22 * ((S22_circ_center_real + 1j * S22_circ_center_imag) / np.sqrt(S22_circ_center_real ** 2 + S22_circ_center_imag ** 2)))
 
     # print('Losses Circle')
-    L_in_av = 1/np.abs(np.sqrt(coef111.real**2 + coef111.imag**2))
-    L_out_av = 1/np.abs(np.sqrt(coef222.real**2 + coef222.imag**2))
+    # L_in_av = 1/np.abs(np.sqrt(coef111.real**2 + coef111.imag**2))
+    # L_out_av = 1/np.abs(np.sqrt(coef222.real**2 + coef222.imag**2))
 
     #SC11 = np.abs((np.abs(co_11) - R11) / (np.abs(co_11) + R11))
     #SC22 = np.abs((np.abs(co_22) - R22) / (np.abs(co_22) + R22))
 
-    co_11t = (co_11)/(np.abs(co_11 + R11*(co_11/np.abs(co_11))))
-    R11t = (R11)/(np.abs(co_11 + R11*(co_11/np.abs(co_11))))
+    # transform circels tangent ot unit circle
+    S11_unitcircle_centre = (S11_circle_centre)/(np.abs(S11_circle_centre + R11*(S11_circle_centre/np.abs(S11_circle_centre))))
+    R11_unitcircle = (R11)/(np.abs(S11_circle_centre + R11*(S11_circle_centre/np.abs(S11_circle_centre))))
 
-    co_22t = (co_22)/(np.abs(co_22 + R22*(co_22/np.abs(co_22))))
-    R22t = (R22)/(np.abs(co_22 + R22*(co_22/np.abs(co_22))))
+    S22_unitcircle_centre = (S22_circle_centre)/(np.abs(S22_circle_centre + R22*(S22_circle_centre/np.abs(S22_circle_centre))))
+    R22_unitcircle = (R22)/(np.abs(S22_circle_centre + R22*(S22_circle_centre/np.abs(S22_circle_centre))))
     
-    # Cirlces are now tangent to unit cirlce
-    SC11 = (np.abs(co_11t) - R11t)
-    SC22 = (np.abs(co_22t) - R22t) 
+    SC11 = (np.abs(S11_unitcircle_centre) - R11_unitcircle)
+    SC22 = (np.abs(S22_unitcircle_centre) - R22_unitcircle) 
      
-    
-    Cbeta1 = (1 - SC11) / (SC11 + SC22)
-    Cbeta2 = (1 - SC22) / (SC11 + SC22)
+    beta1_circle = (1 - SC11) / (SC11 + SC22)
+    beta2_circle = (1 - SC22) / (SC11 + SC22)
 
-    print(Cbeta1)
-    print(Cbeta2)
+    print(beta1_circle)
+    print(beta2_circle)
 
-    beta1 = Cbeta1
-    beta2 = Cbeta2
+    beta1 = beta1_circle
+    beta2 = beta2_circle
 
     # If in some rare cases, it appears a negative beta -> beta = 0.0
 #################################################################
@@ -243,16 +243,16 @@ def BetaFunction(ring_slot,df,phases11_unw,phases22_unw,phase21_unw,tau,MagS21,f
 #         beta2 = Wbeta2SC
 #################################################################
 
-    if 20*np.log10(s21mag) < -50:
-        beta1 = Wbeta1SC
-        beta2 = Wbeta2SC
+    if 20*np.log10(s21_peak_mag) < -50:
+        beta1 = beta1_scalar
+        beta2 = beta2_scalar
 
-    if Wbeta1SC < 0.0 :
+    if beta1_scalar < 0.0 :
         beta1 = 0.0
 
-    if Wbeta2SC < 0.0 :
+    if beta2_scalar < 0.0 :
         beta2 = 0.0
 
-    f = df['s_db 21'].index
-    return beta1,beta2, re11, im11, xc11, yc11, xo11, yo11, re22, im22, xc22, yc22, xo22, yo22, f, s1111, s2222, s2121
+    freq_band = df['s_db 21'].index
+    return beta1, beta2, real_S11, imag_S11, S11_circle_real, S11_circle_imag, S11_circ_center_real, S11_circ_center_imag, real_S22, imag_S22, S22_circle_real, S22_circle_imag, S22_circ_center_real, S22_circ_center_imag, freq_band, S11_dB_raw, S22_dB_raw, S21_db_raw
 
