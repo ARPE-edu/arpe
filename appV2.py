@@ -500,11 +500,7 @@ def update_output(click,session_id, tdict):
     tdict = tdict or {}
     ListofFiles = None or []
 
-    print("Calculate clicked:", click)
-
-
     if isinstance(click, int):
-        print("Inside click is int")
         if click > 0:
             if os.path.exists(os.path.join(conf.dashapp["uploaddir"], session_id)):
                 (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave, Corrupt) = q_mh.TheQFunction(
@@ -563,7 +559,6 @@ def update_output(click,session_id, tdict):
             else:
                 return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
         else:
-            print("Click is zero or negative")
             return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
     else:
         return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
