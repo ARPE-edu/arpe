@@ -1,9 +1,25 @@
 # arpe
 
-# Build Container
+# Docker Deplyoment
+## Build Container
 docker build -t arpe .
+## Run Container 
+docker run -e env=prod -p 8050:8050 arpe 
 
-docker run -p 8050:8050 arpe
+# Podman Deplyoment
+## Build Container
+podman build -t arpe .
+## Run Container 
+podman run -e env=prod -p 8050:8050 arpe 
+
+# Run local
+´´´
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python appV2.py
+´´´
+
 
 # History
 ## 2024-10

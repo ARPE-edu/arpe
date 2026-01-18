@@ -276,7 +276,7 @@ def serve_layout():
                         color='primary',
                         #class_name = "w-100"
                     ),
-                    dbc.Spinner(html.Div(id='loading'), color='primary'),
+                    dbc.Spinner(html.Div(id='loading'), color='primary', show_initially=False),
                 ]),
             html.Br(),
             html.H3('File to Plot', style={
@@ -479,15 +479,26 @@ def handle_uploads(uploaded_filenames, uploaded_file_contents, current_total, up
     return amount_of_files, error_message, duplicate_message, total_successful_uploads, list(unique_uploaded_filenames)  # Return the updated total count and list of uploaded files
 
 
-@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children"), Output('Corrupt', 'data'),Output('name-dropdown', 'options')],
-              [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
+@app.callback(
+        [
+            Output('tdict', 'data'), 
+            Output('loading', 'children'), 
+            Output("final-results", "children"), 
+            Output('Corrupt', 'data'),
+            Output('name-dropdown', 'options')
+        ],
+        [
+            Input('button-calculate', 'n_clicks'), 
+            Input("session-id", "children"), 
+            Input('tdict', 'data')
+        ],
+        prevent_initial_call=True
+)
 def update_output(click,session_id, tdict):
-
     codedone = ''
     DataToSave = None
     tdict = tdict or {}
     ListofFiles = None or []
-
 
     if isinstance(click, int):
         if click > 0:
@@ -498,12 +509,12 @@ def update_output(click,session_id, tdict):
 
 
                 rounding_specs = {
-                'Resonant Frequency [Hz]': 0,  # Replace 'column2' with your actual column name and desired decimals
-                'Loaded Quality Factor': 2,
-                'Coupling Factor S11': 5,
-                'Coupling Factor S22': 5,
-                'Unloaded Quality Factor': 2,
-                'Percentage of Data Removed': 2,  # Add more columns as needed
+                    'Resonant Frequency [Hz]': 0,  # Replace 'column2' with your actual column name and desired decimals
+                    'Loaded Quality Factor': 2,
+                    'Coupling Factor S11': 5,
+                    'Coupling Factor S22': 5,
+                    'Unloaded Quality Factor': 2,
+                    'Percentage of Data Removed': 2,  # Add more columns as needed
                 }
                 
                 DataToExport = DataToSave
@@ -545,8 +556,12 @@ def update_output(click,session_id, tdict):
                         )
                     ]
                 ), Corrupt, [{'label': i, 'value': i} for i in ListofFiles]
+            else:
+                return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
         else:
             return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
+    else:
+        return [None, None, None, None, [{'label': i, 'value': i} for i in ListofFiles]]
 
 
 @app.callback(
@@ -786,7 +801,8 @@ def display_confirm(value):
 
 """ Run it """
 if __name__ == '__main__':
-    ####### global environment
-    app.run(port=8050,debug=False,host='0.0.0.0')
-    ####### local environment
-    # app.run(port=8050, debug=False)
+    env = os.environ.get('env')
+    if env == 'prod':
+        app.run(port=8050, debug=False, host='0.0.0.0')
+    else:
+        app.run(port=8050, debug=True)
