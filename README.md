@@ -3,7 +3,8 @@
 # Build Container
 docker build -t arpe .
 
-docker run -p 8050:8050 arpe
+# Run Container 
+docker run -e env=prod -p 8050:8050 arpe 
 
 # History
 ## 2024-10

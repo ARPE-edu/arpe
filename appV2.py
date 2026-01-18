@@ -786,7 +786,8 @@ def display_confirm(value):
 
 """ Run it """
 if __name__ == '__main__':
-    ####### global environment
-    app.run(port=8050,debug=False,host='0.0.0.0')
-    ####### local environment
-    # app.run(port=8050, debug=False)
+    env = os.environ.get('env')
+    if env == 'prod':
+        app.run(port=8050, debug=False, host='0.0.0.0')
+    else:
+        app.run(port=8050, debug=True)
