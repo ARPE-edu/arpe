@@ -266,18 +266,24 @@ def serve_layout():
                 html.Div(id='duplicatefile', style={'color': 'lightblue'})  # For duplicate messages
             ]),
             html.Ul(id="Dictionary"),
-            html.Div(id="code-finished"),
+            # html.Div(id="code-finished"),
             html.Div(
-                [
-                    dbc.Button(
-                        id='button-calculate',
-                        n_clicks=0,
-                        children='Calculate',
-                        color='primary',
-                        #class_name = "w-100"
-                    ),
-                    dbc.Spinner(html.Div(id='loading'), color='primary'),
-                ]),
+            [
+                dbc.Button(
+                    id='button-calculate',
+                    n_clicks=0,
+                    children='Calculate',
+                    color='primary',
+                ),
+
+                # Spinner only for the "code-finished" output
+                dcc.Loading(
+                    id="calc-loading",
+                    type="default",  # try: "circle", "dot", "cube"
+                    children=html.Div(id="code-finished"),
+                    target_components={"code-finished": "children"},
+                ),
+            ]),
             html.Br(),
             html.H3('File to Plot', style={
                 'textAlign': 'center', 'color':'#ffffff'
@@ -479,7 +485,7 @@ def handle_uploads(uploaded_filenames, uploaded_file_contents, current_total, up
     return amount_of_files, error_message, duplicate_message, total_successful_uploads, list(unique_uploaded_filenames)  # Return the updated total count and list of uploaded files
 
 
-@app.callback([Output('tdict', 'data'), Output('loading', 'children'), Output("final-results", "children"), Output('Corrupt', 'data'),Output('name-dropdown', 'options')],
+@app.callback([Output('tdict', 'data'), Output('code-finished', 'children'), Output("final-results", "children"), Output('Corrupt', 'data'),Output('name-dropdown', 'options')],
               [Input('button-calculate', 'n_clicks'), Input("session-id", "children"), Input('tdict', 'data')])
 def update_output(click,session_id, tdict):
 
@@ -495,7 +501,7 @@ def update_output(click,session_id, tdict):
                 (ListofFiles, WCCFXList, PlotDataList, QUnloaded, DataToSave, Corrupt) = q_mh.TheQFunction(
                     os.path.join(conf.dashapp["uploaddir"], session_id))
                 codedone = html.Div('The calculations are finished',style={'color': 'white'})
-
+                
 
                 rounding_specs = {
                 'Resonant Frequency [Hz]': 0,  # Replace 'column2' with your actual column name and desired decimals
